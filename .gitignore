@@ -1,0 +1,25 @@
+# Data — too large for git
+data/
+results/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.uv/
+*.egg-info/
+dist/
+build/
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+
+# System
+.DS_Store
+
+# Claude Code project cache (user-specific)
+.claude/
