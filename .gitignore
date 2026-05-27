@@ -1,6 +1,6 @@
-# Data — too large for git
-data/
-results/
+# Data — too large for git (root-level only, not src/forensic_mh/data)
+/data/
+/results/
 
 # Python
 __pycache__/
