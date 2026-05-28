@@ -19,6 +19,206 @@
 
 ---
 
+## ⚠️ REVISION 2026-05-29 (Opus 4.8) — 상태 점검 + 방법론 수정
+
+이 섹션이 아래 원본 task보다 **우선**한다. 원본은 이력 보존용.
+
+### 실행 상태 (git + 산출물 점검)
+
+| Task | 상태 | 비고 |
+|---|---|---|
+| 1–2 git/구조/pyproject | ✅ 완료 | |
+| 3 1000G 다운로드 | ✅ 완료 | **v5a 아님 — v5b** 사용 (v5a 폐기됨). 스크립트/경로 v5b로 갱신됨 |
+| 4 EAS 504 추출 | ✅ 완료 | |
+| 5 MicroHapDB wrapper | ✅ 완료 (원안 초과) | hg19/hg38 coord-aware, chr22에 **53 marker** (원안 추정 5–15 초과) |
+| 6 diplotype 추출 | ✅ 완료 | |
+| 7–8 grouping + nested CV | ✅ 완료 | 단 **scripts/03이 `groups=` 미전달** → 커밋된 baseline은 relatedness grouping 없음. P0 #8은 "scaffold만, 미적용"이 정확 |
+| 9 baseline 실행 | ✅ 완료 | chr22-only → 정확도 chance 수준 (0.24~0.30). pipeline 검증 목적은 달성 |
+| 12 reliable_ae 코드 | ⚠️ 부분 | 아래 수정 필요 (Ae 미계산, phasing 분모 편향) |
+| 10 KoVariome | ❌ **폐기·재정의** | 아래 참조 |
+| 11 trio ped 다운로드 | ⚠️ 수동 완료 | `data/1000g/g1k.ped` 존재. scripts/06 미커밋. `v2.ped`는 404 HTML 쓰레기 (삭제) |
+| 13 phasing 분석 스크립트 | ❌ 미작성 | 아래 수정본으로 작성 |
+| 14 RESULTS 문서 | ❌ 미작성 | 아래 갱신본 |
+| 테스트 | ✅ 18 passed | |
+
+### 수정 1 — Task 10 재정의: KoVariome 폐기 → **genome-wide MH 추출**
+
+KOR 외부 검증은 폐기 (Korean WGS 확보 불가). Task 10의 sparkq/Node 2 slot은 **genome-wide marker 추출**로 재배정. chr22-only가 chance-level인 근본 원인이 marker 부족이므로, 이게 진짜 우선순위다. `scripts/02_extract_eas_samples.sh`는 `CHR` 인자로 chromosome별 실행 가능 → 전 chromosome 루프 + `build_diplotype_matrix`를 chromosome 리스트로 확장. (Plan 2/3는 marker-set agnostic하게 설계하므로 이 task는 병렬 진행 가능.)
+
+### 수정 2 — Task 12: Ae 계산 추가 + phasing 분모 교정
+
+**문제 (A) — Reliable-Ae가 base term이 없음**: 커밋된 `reliable_ae(ae, p)`는 penalty만 있고 Ae를 MicroHapDB **공개값**에서 받음 (EAS 데이터 미반영). "EAS에서 informative" 주장이 깨짐. → EAS diplotype 빈도에서 직접 Ae 계산하는 함수 추가.
+
+**문제 (B) — phasing error rate가 0으로 편향**: trio Mendelian 체크 자체(haplotype 문자열이 부모에 있는지)는 switch error를 **잡을 수 있다**. 단 분모에 **uninformative meiosis**(자녀가 homozygous인 locus — phase가 의미 없음)를 포함하면 rate가 0쪽으로 희석된다. → 분모를 **informative meiosis(자녀 heterozygous)로 제한**. genotyping error와 phasing error를 trio만으로 완전 분리 못 하는 점은 limitation으로 명시.
+
+`src/forensic_mh/metrics/reliable_ae.py`에 추가:
+
+```python
+from collections import Counter
+
+
+def compute_ae(diplotypes: dict[str, tuple[str, str]]) -> float:
+    """Effective number of alleles Ae = 1 / Σ p_i² over HAPLOTYPE frequencies.
+
+    Ae is computed on haplotype (allele) frequencies — each sample contributes
+    its two haplotypes. Haplotypes containing 'N' (missing) are skipped.
+    Returns 0.0 if no callable haplotypes.
+    """
+    hap_counts: Counter = Counter()
+    for h0, h1 in diplotypes.values():
+        for h in (h0, h1):
+            if "N" not in h:
+                hap_counts[h] += 1
+    total = sum(hap_counts.values())
+    if total == 0:
+        return 0.0
+    sum_sq = sum((c / total) ** 2 for c in hap_counts.values())
+    return 1.0 / sum_sq if sum_sq > 0 else 0.0
+
+
+def is_informative_meiosis(child: tuple[str, str]) -> bool:
+    """A meiosis reveals a within-haplotype switch error only if the child is
+    heterozygous at the locus (two distinct haplotypes). Homozygous children
+    are uninformative and MUST be excluded from the phasing-error denominator,
+    otherwise the error rate is biased toward 0."""
+    return child[0] != child[1]
+```
+
+추가 테스트 (`tests/metrics/test_reliable_ae.py`):
+
+```python
+from forensic_mh.metrics.reliable_ae import compute_ae, is_informative_meiosis
+
+
+def test_compute_ae_uniform_two_haplotypes():
+    # two haplotypes at 50/50 → Ae = 1/(0.5²+0.5²) = 2.0
+    d = {"s1": ("A-T", "A-T"), "s2": ("G-C", "G-C")}
+    assert compute_ae(d) == pytest.approx(2.0)
+
+
+def test_compute_ae_skips_missing():
+    d = {"s1": ("A-T", "N-N"), "s2": ("A-T", "A-T")}
+    # only three callable A-T haplotypes → monomorphic → Ae = 1.0
+    assert compute_ae(d) == pytest.approx(1.0)
+
+
+def test_informative_meiosis_only_when_child_heterozygous():
+    assert is_informative_meiosis(("A-T", "G-C")) is True
+    assert is_informative_meiosis(("A-T", "A-T")) is False
+```
+
+### 수정 3 — Task 13: 교정된 phasing 스크립트 + Reliable-Ae 표 산출
+
+원안의 Task 13 스크립트를 아래로 대체. 핵심 차이: (i) v5b 경로, (ii) **informative meiosis만 분모**, (iii) EAS Ae × (1−p_err) = per-marker **Reliable-Ae 표**를 실제 산출 (P0 #4의 진짜 deliverable).
+
+```python
+# scripts/04_wei2025_phasing.py
+"""Day 3 산출(교정본): per-MH phasing error (informative meiosis only) +
+EAS Reliable-Ae 표. Wei 2025 재현 + P0 #4 deliverable."""
+from __future__ import annotations
+import json
+from pathlib import Path
+import pandas as pd
+
+from forensic_mh.data.markers import load_mh_markers, filter_by_chromosome, parse_positions
+from forensic_mh.data.vcf_io import extract_diplotypes_for_locus
+from forensic_mh.metrics.reliable_ae import (
+    is_mendelian_consistent_diplotype, is_informative_meiosis,
+    compute_ae, reliable_ae,
+)
+
+PED_CANDIDATES = ["data/1000g/g1k.ped",
+                  "data/1000g/integrated_call_samples_v3.20130502.ALL.ped"]
+VCF_ALL = "data/1000g/ALL.chr22.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.gz"
+VCF_EAS = "data/eas/EAS_chr22.vcf.gz"
+PANEL = "data/1000g/integrated_call_samples_v3.20130502.ALL.panel"
+BUILD = "hg19"  # 1000G phase3 좌표
+
+
+def load_trios() -> list[tuple[str, str, str]]:
+    ped = next((p for p in PED_CANDIDATES if Path(p).exists()), None)
+    if ped is None:
+        raise FileNotFoundError("g1k.ped 필요 (data/1000g/)")
+    df = pd.read_csv(ped, sep="\t")
+    df.columns = [c.strip() for c in df.columns]
+    pa, ma, ind = "Paternal ID", "Maternal ID", "Individual ID"
+    trios = df[(df[pa] != "0") & (df[ma] != "0")]
+    panel_samples = set(pd.read_csv(PANEL, sep="\t")["sample"])
+    out = []
+    for _, r in trios.iterrows():
+        if {r[pa], r[ma], r[ind]} <= panel_samples:
+            out.append((r[pa], r[ma], r[ind]))
+    return out
+
+
+def main():
+    trios = load_trios()
+    print(f"[1/3] {len(trios)} complete trios (panel-present)")
+    markers = filter_by_chromosome(load_mh_markers(), "chr22")
+    eas_ids = Path("data/eas/EAS_samples.txt").read_text().split()
+    trio_ids = sorted({i for t in trios for i in t})
+    print(f"[2/3] {len(markers)} chr22 MH; {len(eas_ids)} EAS; {len(trio_ids)} trio members")
+
+    results = []
+    for _, mh in markers.iterrows():
+        positions = parse_positions(mh, build=BUILD)
+        if not positions:
+            continue
+        # EAS Ae (allele freq from EAS subset)
+        eas_dip = extract_diplotypes_for_locus(VCF_EAS, "22", positions, eas_ids)
+        ae = compute_ae(eas_dip)
+        # phasing error from informative trio meioses (ALL-sample VCF)
+        trio_dip = extract_diplotypes_for_locus(VCF_ALL, "22", positions, trio_ids)
+        n_inf, n_bad = 0, 0
+        for f, m, c in trios:
+            if f not in trio_dip or m not in trio_dip or c not in trio_dip:
+                continue
+            fd, md, cd = trio_dip[f], trio_dip[m], trio_dip[c]
+            if any("N" in h for h in fd + md + cd):
+                continue
+            if not is_informative_meiosis(cd):
+                continue  # uninformative — exclude from denominator
+            n_inf += 1
+            if not is_mendelian_consistent_diplotype(fd, md, cd):
+                n_bad += 1
+        p_err = (n_bad / n_inf) if n_inf > 0 else 0.0
+        results.append({
+            "marker": mh["Name"],
+            "ae_eas": round(ae, 4),
+            "n_informative_meioses": n_inf,
+            "n_mendelian_violations": n_bad,
+            "p_phase_error": round(p_err, 5),
+            "reliable_ae": round(reliable_ae(ae, p_err), 4),
+        })
+
+    out = Path("results/baseline/chr22_reliable_ae.json")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(results, indent=2))
+    print(f"[3/3] saved {out}")
+    inf = [r for r in results if r["n_informative_meioses"] > 0]
+    if inf:
+        mean_pe = sum(r["p_phase_error"] for r in inf) / len(inf)
+        print(f"  markers w/ informative meioses: {len(inf)}/{len(results)}")
+        print(f"  mean P_phase_error: {mean_pe:.5f}  (Wei 2025 global ≈ 0.0007)")
+        print(f"  mean Ae (EAS): {sum(r['ae_eas'] for r in inf)/len(inf):.3f}")
+```
+
+⚠️ chr22 EAS trio는 거의 0 → ALL-sample trio(주로 비-EAS) 사용. 따라서 p_err는 **글로벌** 추정치이고 EAS-specific 아님 — RESULTS와 논문에 명시. Ae는 EAS-specific (위 코드에서 EAS VCF 사용).
+
+테스트는 수정 2의 synthetic trio 테스트로 충분 (스크립트는 thin orchestration).
+
+### 수정 4 — Task 14 RESULTS: 정직한 상태 + KOR scoping
+
+P0 표에서 #8을 "✅"가 아니라 "△ scaffold만, 커밋된 baseline에는 미적용"으로, KOR 외부 검증 항목은 "scope 제외 (데이터 불가)"로 기록. Reliable-Ae는 위 `chr22_reliable_ae.json` 산출 후 "✅ deliverable 존재"로.
+
+### 정리 작업
+
+- `v2.ped` 삭제 (404 HTML).
+- (선택) scripts/04 작성·실행 → `chr22_reliable_ae.json` 생성 → commit.
+- scripts/03에 `groups=` 배선은 EAS에 trio 거의 없어 효과 미미하나, 정직성을 위해 grouping 미적용을 RESULTS에 명기.
+
+---
+
 ## File Structure (이 Plan에서 생성·수정할 파일)
 
 ```
