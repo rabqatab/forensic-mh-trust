@@ -1,9 +1,32 @@
 import pytest
 
 from forensic_mh.metrics.reliable_ae import (
+    compute_ae,
+    is_informative_meiosis,
     is_mendelian_consistent_diplotype,
     reliable_ae,
 )
+
+
+def test_compute_ae_uniform_two_haplotypes():
+    # two haplotypes at 50/50 → Ae = 1/(0.5²+0.5²) = 2.0
+    d = {"s1": ("A-T", "A-T"), "s2": ("G-C", "G-C")}
+    assert compute_ae(d) == pytest.approx(2.0)
+
+
+def test_compute_ae_skips_missing():
+    d = {"s1": ("A-T", "N-N"), "s2": ("A-T", "A-T")}
+    # only three callable A-T haplotypes → monomorphic → Ae = 1.0
+    assert compute_ae(d) == pytest.approx(1.0)
+
+
+def test_compute_ae_empty_returns_zero():
+    assert compute_ae({"s1": ("N-N", "N-N")}) == pytest.approx(0.0)
+
+
+def test_informative_meiosis_only_when_child_heterozygous():
+    assert is_informative_meiosis(("A-T", "G-C")) is True
+    assert is_informative_meiosis(("A-T", "A-T")) is False
 
 
 def test_mendelian_consistent_trivial_homozygote():

@@ -10,6 +10,35 @@ so high-Ae markers (which a naive selector prefers) are the riskiest.
 """
 from __future__ import annotations
 
+from collections import Counter
+
+
+def compute_ae(diplotypes: dict[str, tuple[str, str]]) -> float:
+    """Effective number of alleles Ae = 1 / Σ p_i² over HAPLOTYPE frequencies.
+
+    Ae is computed on haplotype (allele) frequencies — each sample contributes
+    its two haplotypes. Haplotypes containing 'N' (missing) are skipped.
+    Returns 0.0 if no callable haplotypes.
+    """
+    hap_counts: Counter = Counter()
+    for h0, h1 in diplotypes.values():
+        for h in (h0, h1):
+            if "N" not in h:
+                hap_counts[h] += 1
+    total = sum(hap_counts.values())
+    if total == 0:
+        return 0.0
+    sum_sq = sum((c / total) ** 2 for c in hap_counts.values())
+    return 1.0 / sum_sq if sum_sq > 0 else 0.0
+
+
+def is_informative_meiosis(child: tuple[str, str]) -> bool:
+    """A meiosis reveals a within-haplotype switch error only if the child is
+    heterozygous at the locus (two distinct haplotypes). Homozygous children
+    are uninformative and MUST be excluded from the phasing-error denominator,
+    otherwise the error rate is biased toward 0."""
+    return child[0] != child[1]
+
 
 def is_mendelian_consistent_diplotype(
     father: tuple[str, str],
