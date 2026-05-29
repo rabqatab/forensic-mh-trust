@@ -32,14 +32,15 @@ def test_masked_positions_are_set_to_mask_token_and_targets_preserved():
 
 
 def test_ado_collapses_only_heterozygous_cells():
-    # marker 0 of sample 0 is "A|T" (het); ado_prob=1 forces collapse to hom
+    # marker 0 of sample 0 is "A|T" (het); ado_prob=1 forces collapse to hom.
+    # marker 1 of sample 0 is "G|G" (hom); must be unchanged.
     ds, v = _ds(ado_prob=1.0, drop_prob=0.0)
     item = ds[0]
-    # collapsed het encodes to either A|A or T|T; both are rare here → OTHER,
-    # but crucially it must differ from the original het code OR be OTHER.
     orig = v.encode([["A|T", "G|G"]])[0]
-    # marker 1 "G|G" is hom → ado leaves it unchanged across views
-    assert item["view1"][1].item() == orig[1] or item["view1"][1].item() == v.OTHER
+    # het marker 0 must change (collapses to A|A or T|T, neither == original A|T code)
+    assert item["view1"][0].item() != orig[0]
+    # hom marker 1 must remain unchanged (ADO only targets het cells)
+    assert item["view1"][1].item() == orig[1]
 
 
 def test_len_matches_sample_count():

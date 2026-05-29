@@ -26,6 +26,14 @@ def _ado(row: list[str], rng: np.random.Generator, p: float) -> list[str]:
 
 
 class MHMatrixDataset(Dataset):
+    """Masked-modeling + contrastive dataset for microhaplotype matrices.
+
+    Augmentation is stochastic — each ``__getitem__`` draws fresh samples from
+    ``self.rng``.  Because ``self.rng`` is shared state, DataLoader must use
+    ``num_workers=0`` (or a ``worker_init_fn`` that reseeds the RNG) to avoid
+    identical augmentations across forked workers.
+    """
+
     def __init__(self, rows: list[list[str]], vocab: FMVocab,
                  mask_frac: float = 0.15, ado_prob: float = 0.1,
                  drop_prob: float = 0.15, seed: int = 0):
