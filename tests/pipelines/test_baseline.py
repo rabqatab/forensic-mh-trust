@@ -30,6 +30,14 @@ def test_discover_chrom_vcfs_maps_chrom_to_path(tmp_path):
     assert found["1"].endswith("EAS_chr1.vcf.gz")
 
 
+def test_discover_chrom_vcfs_custom_prefix_isolates_ood(tmp_path):
+    # EAS and OOD subsets coexist; prefix must select the right family
+    for name in ["EAS_chr1.vcf.gz", "OOD_chr1.vcf.gz", "OOD_chr2.vcf.gz"]:
+        (tmp_path / name).write_text("")
+    assert set(discover_chrom_vcfs(str(tmp_path), prefix="OOD_chr")) == {"1", "2"}
+    assert set(discover_chrom_vcfs(str(tmp_path), prefix="EAS_chr")) == {"1"}
+
+
 def test_encode_assigns_per_column_codes_and_fills_missing():
     rows = {
         "s1": {"m1": "A|A", "m2": "G|G"},

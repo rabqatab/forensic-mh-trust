@@ -31,8 +31,8 @@ def _to_lists(rows, sids, names):
 
 
 def main() -> None:
-    eas_vcfs = discover_chrom_vcfs(EAS_DIR)
-    ood_vcfs = discover_chrom_vcfs(OOD_DIR)
+    eas_vcfs = discover_chrom_vcfs(EAS_DIR, prefix="EAS_chr")
+    ood_vcfs = discover_chrom_vcfs(OOD_DIR, prefix="OOD_chr")
     common = sorted(set(eas_vcfs) & set(ood_vcfs), key=int)
     if not common:
         raise SystemExit("No chromosome has BOTH EAS and OOD subsets yet "
