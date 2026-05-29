@@ -85,6 +85,7 @@ synthetic: SSL loss 11.47→6.52; finetune acc 0.36→0.92; **ConformalClassifie
 → **PCA류는 도움 안 됨**(최선 45.8% < raw 56.1%, −10.3p). 경쟁작 이득은 PCA가 아니라 ancestry-최적 AISNP 선별 + ADMIXTURE에서 옴. one-hot MH에 SVD를 씌우면 XGBoost가 raw에서 쓰던 marker별 판별 신호가 소실.
 
 ## 9. Exp 9 — Model zoo (full 3,042, 동일 5-fold + conformal/OSR)
+> ⚠ **인코딩 confounded**(트리=ordinal, linear/distance=one-hot+StandardScaler). 정식 비교는 §13의 전-모델 one-hot(no scaler) 재실행. 아래는 이력 보존용.
 `results/baseline/model_zoo.json`. tree=ordinal 인코딩, linear/distance=one-hot Pipeline.
 | 모델 | 정확도 | coverage | set size | **MSP AUROC** |
 |---|---|---|---|---|
@@ -103,22 +104,21 @@ synthetic: SSL loss 11.47→6.52; finetune acc 0.36→0.92; **ConformalClassifie
 | FM | 0.263 | 0.947 | 4.45 | 0.532 |
 → **FM이 XGBoost에 짐**(소데이터 504로 transformer 과적합; 어댑터는 masked-only SSL). 두 모델 절대치가 낮은 건 **high-Ae 패널이 약하기 때문**(Ae=집단 내 다양성 ≠ 집단 간 FST). FM의 활로 = unlabeled 데이터 확장(all-2504/NYGC) + contrastive 활성화(Plan 3b-extended).
 
-## 11. Exp 11 — RandomForest base로 Plan 2 재산출 (완료)
-`results/baseline/plan2_rf_vs_xgb.json` — 동일 데이터·인코딩·split, **base_estimator만 교체**:
+## 11. Exp 11 — Plan 2 재산출: base 모델 교체 (XGBoost → RF → LogReg one-hot)
+`results/baseline/plan2_rf_vs_xgb.json`, `plan2_logreg.json` — 동일 데이터·split, **base_estimator만 교체** (model-agnostic trust layer):
 
-| 지표 | XGBoost | **RandomForest** |
-|---|---|---|
-| coverage @α=0.1 | 0.888 | 0.908 |
-| set size @α=0.1 | 2.61 | **2.45** (더 좁음) |
-| far-OOD MSP AUROC | 0.695 | **0.803** |
-| far-OOD FPR@95TPR | 0.75 | **0.572** |
-| empty-set OOD reject | **0** (전 α) | **발화** — α=0.3 →0.21, α=0.2 →0.02 (in-dist ≤0.02) |
-| LOPO near-OOD gap | 0 (전 집단) | CHS **0.048** (나머지 0) |
+| 지표 (α=0.1 기준) | XGBoost | RandomForest | **LogReg(one-hot)** |
+|---|---|---|---|
+| set size | 2.61 | 2.45 | **1.79** (가장 결정적) |
+| far-OOD MSP AUROC | 0.695 | 0.803 | **0.849** |
+| far-OOD FPR@95TPR | 0.75 | 0.572 | **0.461** |
+| empty-set OOD reject @α0.3 | **0** | 0.21 | **0.593** |
+| LOPO near-OOD (held-out reject) | 0 (전부) | CHS 0.048 | **CHS 0.162, KHV 0.020** |
+| coverage @α0.1 | 0.888 | 0.908 | 0.895 |
 
-→ **RF가 trustworthy 축을 실질 개선**: far-OOD AUROC **+0.11**, FPR@95 0.75→**0.57**, **empty-set reject 0→발화**(XGBoost는 전혀 안 됨), near-OOD도 CHS에서 미약 검출. set도 더 좁음.
-**핵심 결론**: §4·§5의 OSR 약점은 방법의 한계가 아니라 **상당 부분 base model(XGBoost 과확신) 문제**였고, model-agnostic trust layer에서 **base만 RF로 바꾸면(한 줄) 개선**된다.
-주의: RF는 α=0.05에서 coverage 0.928(<0.95) — 소표본 per-class calibration으로 약간 under-cover → 운영 α=0.10 권장.
-**상태 ✅ — RandomForest를 권장 base로.**
+→ **LogReg(one-hot)이 trustworthy 전 지표 최고**: 가장 좁은 set(1.79), 최고 OSR(AUROC 0.849, FPR@95 0.461), empty-set OOD 거부 **59%**, near-OOD도 CHS 16%로 가장 잘 검출.
+**핵심 결론(정정)**: §4·§5의 OSR 약점은 방법 한계가 아니라 **base model 문제**였고 — 단 RF가 아니라 **LogReg(one-hot)이 정확도(79.6%)·신뢰성 모두에서 최고**. model-agnostic layer에서 base만 교체(한 줄)로 달성. (이전 "RF 권장"은 ordinal 비교 기준 — 철회.)
+**상태 ✅ — 권장 base = LogReg(one-hot).** (참고: LogReg는 α=0.05에서 cov 0.967로 보수적, RF는 0.928로 약간 under — 운영 α=0.10 권장.)
 
 ## 12. 관련 연구 비교 — Chen et al. 2025 (Human Genomics, 95.6%)
 경쟁작의 95.6%는 **직접 비교 불가**: (a) **9개 광역·언어계통 클러스터**(중앙아·시베리아·동남아 포함, FST 높음) 분류, (b) **AISNP 2,000개 + PCA/ADMIXTURE** 피처, (c) Human Origins(array) 1,703명/67집단. 그들도 근연 그룹 sensitivity는 **0.66~0.87**. 우리 과제(1000G EAS-5, low FST, MH)와 입도·마커·데이터가 모두 다름. **차별점**: calibrated UQ/OSR + Reliable-Ae + forensic admissibility(경쟁작 부재).
@@ -131,7 +131,17 @@ synthetic: SSL loss 11.47→6.52; finetune acc 0.36→0.92; **ConformalClassifie
 |---|---|
 | **LogReg + one-hot (no scaler)** | **79.6% ± 3.9** (folds 0.86/0.74/0.78/0.78/0.81) |
 | LogReg + one-hot + StandardScaler | 46.6% ± 5.4 |
-→ **"57% 천장"은 ordinal 인코딩 artifact**(§1·§7의 tree-on-ordinal). MH는 명목형 → one-hot+linear가 ordinal-tree(XGB 52/RF 57)·SSL FM(26)을 **압도(79.6%)**. `StandardScaler(with_mean=False)`가 one-hot 희소컬럼을 과증폭 → §9 model-zoo의 linear/distance 모델을 부당하게 망가뜨림(46.6%가 그 증거). **권장 base = LogReg(one-hot)** (정확도·OSR 모두 최고).
+
+**전 모델 one-hot(no scaler) 5-fold CV** (`results/baseline/model_zoo_onehot.json`) — 모든 모델을 올바른 인코딩으로 재실행:
+| 모델 | one-hot CV | (이전 잘못된 값) |
+|---|---|---|
+| **LogReg** | **79.6%** | — |
+| kNN | 64.9% | 21.2% (scaler) |
+| RandomForest | 59.7% | 56.6% (ordinal) |
+| XGBoost | 56.9% | 52.0% (ordinal) |
+| SVM-RBF | 41.1% | 25.4% |
+
+→ **정밀 결론: "one-hot이 다 고친다"가 아니라 "정규화 *선형*+one-hot이 이긴다"**. 트리는 one-hot으로도 57→60%에 그침(48k 희소 binary × 504 샘플 p≫n에서 axis-aligned split 희석). kNN은 scaler 제거로 21→65% 급등(StandardScaler가 거리모델을 죽였던 게 확정). **권장 base = LogReg(one-hot)** — 정확도(79.6%)·OSR(AUROC 0.85, §11) 모두 최고. ("57% 천장"은 ordinal-tree artifact였고, 정확히는 *고차원 one-hot MH에서 정규화 선형모델 우위*가 결론.)
 
 ## 14. Exp 14 — Calibration(ECE) + Deep Ensembles / MC-Dropout UQ
 `results/baseline/calibration_uq.json` (70/30 split):
@@ -155,7 +165,7 @@ synthetic: SSL loss 11.47→6.52; finetune acc 0.36→0.92; **ConformalClassifie
 → 우아한 저하나 **ADO 50%에서 coverage 0.91→0.80(보장 깨짐)** — conformal exchangeability 위반(train clean vs test 열화). forensic admissibility에 중요(경쟁작 미탐구). base를 LogReg(one-hot)로 한 ADO 재실험은 follow-up.
 
 ## 16. 종합 핵심 발견
-1. **천장은 FST가 아니라 인코딩/모델이었다(정정)**: ordinal-tree로 57%였지만 **one-hot+LogReg로 79.6%(CV)** — 70% 목표를 MH-only로 초과. 가장 단순한 모델이 가장 강함(Simplicity Test). 본 연구 메시지가 "low-acc라 UQ로 보완"에서 "**competitive acc + calibrated UQ/OSR**"로 격상.
+1. **천장은 FST가 아니라 모델×인코딩이었다(정정)**: 정밀하게는 **고차원 one-hot MH(p≫n)에서 정규화 *선형*모델 우위** — LogReg(one-hot) **79.6%(CV)**, 트리는 one-hot으로도 57→60%, SVM 41%, FM 26%. 70% 목표를 MH-only로 초과(SNP 확장 불요). 가장 단순한 모델이 정확도·신뢰성 모두 석권(Simplicity Test). 메시지가 "low-acc라 UQ로 보완"에서 "**competitive acc + calibrated UQ/OSR, 게다가 단순함이 이긴다**"로 격상.
 2. **권장 base = Logistic Regression(one-hot)**: 정확도(79.6%)·far-OOD OSR(AUROC 0.84) 모두 최고. (이전 "RF 권장"은 ordinal 비교 기준이었음.)
 3. **Calibration(ECE) ≠ OSR(AUROC)**: XGBoost 최선 보정·RF 최악, 그러나 OSR은 rank 분리가 좌우. epistemic(앙상블/MC-dropout)은 OOD 미검출 — MSP/empty-set이 실효 신호.
 4. **Coverage 보장은 작동하나 분포 변화(ADO)엔 취약** — 열화 시료 robustness가 차별적 forensic 기여.
