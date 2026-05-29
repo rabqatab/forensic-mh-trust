@@ -32,18 +32,20 @@ def test_reject_rate_counts_empty_sets():
     assert reject_rate(sets) == pytest.approx(0.5)
 
 
-# --- open_set_decision: YOUR contribution (Task 4 Step 3b) ---
-# These two endpoints are the spec your reject rule must satisfy. They are
-# xfail until you implement open_set_decision (remove the markers when done).
+# --- open_set_decision (Task 4 Step 3b): reject if empty set OR low MSP ---
 
-@pytest.mark.xfail(reason="awaiting user implementation of open_set_decision", strict=False)
 def test_open_set_decision_rejects_empty_set():
     # empty conformal set must reject regardless of MSP
     d = open_set_decision(pred_set=[], max_prob=0.99, msp_threshold=0.0)
     assert d == "reject"
 
 
-@pytest.mark.xfail(reason="awaiting user implementation of open_set_decision", strict=False)
 def test_open_set_decision_accepts_confident_nonempty():
     d = open_set_decision(pred_set=[1], max_prob=0.9, msp_threshold=0.5)
     assert d == [1]
+
+
+def test_open_set_decision_rejects_nonempty_but_low_msp():
+    # set is non-empty but the top probability is below threshold → reject
+    d = open_set_decision(pred_set=[1], max_prob=0.3, msp_threshold=0.5)
+    assert d == "reject"

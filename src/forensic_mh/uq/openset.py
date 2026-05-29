@@ -52,6 +52,14 @@ def open_set_decision(pred_set: list[int], max_prob: float,
     Forensic framing: a false *accept* of an unknown-population sample is the
     costly error in court. That argues for the more conservative rule — but
     over-rejecting destroys utility. Your call shapes the OSR operating point.
+
+    Chosen rule (conservative, forensic-prioritised): reject if EITHER signal
+    fires — empty conformal set OR top probability below the MSP threshold.
+    Rationale: the two signals fail in different regimes (the set can be
+    non-empty yet diffuse at small α; MSP can be high yet the true class still
+    excluded), so OR-combination minimises false accepts of unknowns. Tune
+    msp_threshold to slide the utility/safety operating point.
     """
-    # TODO(you): 3-6 lines implementing your chosen combination.
-    raise NotImplementedError
+    if not pred_set or max_prob < msp_threshold:
+        return "reject"
+    return pred_set
