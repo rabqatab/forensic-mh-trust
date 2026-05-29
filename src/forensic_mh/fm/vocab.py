@@ -13,6 +13,8 @@ import numpy as np
 
 class FMVocab:
     def __init__(self, rows: list[list[str]], k: int = 16):
+        if not rows:
+            raise ValueError("FMVocab requires at least one row")
         self.k = k
         self.OTHER = k - 1
         self.MASK = k
@@ -22,7 +24,7 @@ class FMVocab:
         self.maps_: list[dict[str, int]] = []
         for j in range(self.n_markers):
             counts = Counter(row[j] for row in rows)
-            top = [s for s, _ in counts.most_common(k - 1)]
+            top = sorted(counts, key=lambda s: (-counts[s], s))[: k - 1]
             self.maps_.append({s: i for i, s in enumerate(top)})
 
     def encode(self, rows: list[list[str]]) -> np.ndarray:
