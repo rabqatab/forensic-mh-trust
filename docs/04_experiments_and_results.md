@@ -191,3 +191,28 @@ uv run python scripts/19_onehot_cv.py           # one-hot LogReg 5-fold CV (Exp 
 3. **ADO 재실험을 LogReg(one-hot) base로** + clean+ADO 혼합 calibration으로 coverage 회복 시도.
 4. **Paper 1 메시지 재정립**: "competitive accuracy(80%, one-hot) + calibrated UQ/OSR + ADO robustness; 단순 인코딩이 복잡 모델을 이긴다."
 5. (deferred) FM/contrastive + 데이터 확장(Paper 2), NYGC trio(Reliable-Ae), msp_threshold 운영곡선, 도표화(`academic-plotting`).
+
+---
+
+## 부록 A — 인코딩 변천사·근거·결함 (post-mortem)
+
+> 왜 ~57% "천장"에 오래 갇혀 있었는가의 근본 원인. 핵심: **명목형(diplotype)을 ordinal 정수로 인코딩**한 것 + **one-hot에 StandardScaler를 씌운 실수**가 진짜 성능을 가렸다. one-hot(no scaler)+LogReg로 79.6%가 드러나며 발견됨(Exp 13).
+
+### A.1 사용한 인코딩 3종 — 어떻게/왜
+| # | 인코딩 | 위치 | 어떻게 | 왜 그렇게 했나 |
+|---|---|---|---|---|
+| 1 | **per-marker LabelEncoder (ordinal)** | `pipelines/baseline.py` `_encode` | marker 열마다 diplotype 문자열 → `LabelEncoder` → 임의 정수 코드. 결측 `N\|N`도 코드화 | Plan 1 baseline. 범주형을 가장 간단히 수치행렬로 → XGBoost(tree)에 투입. tree는 정수 feature에 split 가능 |
+| 2 | **DiplotypeEncoder (ordinal + unseen)** | `data/encoding.py` | #1과 동일하나 train에 fit, unseen→예약코드(-1) | Plan 2에서 EAS/OOD 간 **코드 일관성** + OOD의 novel diplotype 처리(unseen→-1 자체가 OOD 신호) 필요 |
+| 3 | **FMVocab (capped ordinal, top-K+MASK)** | `fm/vocab.py` | marker별 상위 K-1 빈도 + OTHER + MASK slot | SSL FM의 **per-marker 임베딩 테이블**용(임베딩이 코드를 학습벡터로 변환 → 명목성 무관). 임베딩 크기 cap |
+
+### A.2 왜 결함이었나
+- **ordinal 인코딩(#1·#2·#3을 raw feature로 쓸 때)의 근본 문제**: diplotype은 **명목형**(순서 없음)인데 LabelEncoder는 *임의의 순서*를 부여한다(예: `A-T|G-C`=0, `A-A|A-A`=1, `T-T|T-T`=2 …). tree 모델은 `x ≤ t` 임계 split만 하므로, 이 임의 순서에서 **인접한 코드들만 묶을 수 있다**. "코드 0과 5 vs 1·2·3·4"처럼 비인접 범주를 분리하려면 split을 여러 번 낭비 → 명목 신호가 체계적으로 소실. 그래서 XGBoost 52%·RF 57%에 갇혔다. (FM은 임베딩이 명목성을 처리하므로 인코딩이 *FM의* 병목은 아니었고, FM의 문제는 데이터 부족이었다.)
+- **StandardScaler(with_mean=False) on one-hot 실수 (model-zoo, `scripts/15`)**: 선형·거리 모델에 "스케일링이 필요하다"는 통념으로 추가했으나, **one-hot 지시컬럼에 적용하면 각 컬럼을 std=√(p(1-p))로 나눠 희소(rare) 범주를 과증폭** → LogReg/SVM이 잡음 많은 rare one-hot에 과적합. 그 결과 LogReg가 46.6%로 보여 "tree가 최고 / 천장 57%"라는 **틀린 결론을 강화**했다. (Exp 13: scaler 제거 시 46.6%→79.6%로 확정.)
+
+### A.3 왜 늦게 발견됐나
+ordinal이 Plan 1의 tree-친화 기본값이었고 Plan 1–2 내내 유지. 경쟁작이 SNP+PCA를 써서 "피처가 더 필요하다"에 anchoring. model-zoo의 one-hot arm마저 StandardScaler로 망가져(46.6%) 잘못된 결론을 보강. Thread 1(calibration)에서 **우연히 scaler 없이** one-hot LogReg를 돌리며 73–80%가 드러남.
+
+### A.4 교훈 (Paper 1에도 반영)
+- **명목형 유전 마커는 one-hot(+linear)이 기본** — ordinal-LabelEncoder를 tree에 쓰면 성능이 조용히 깎인다.
+- **one-hot에 StandardScaler 금지** (지시컬럼은 이미 동일 스케일; 스케일링은 rare 범주를 왜곡).
+- 이 자체가 방법론적 기여: "복잡한 모델/피처 이전에 **인코딩**이 fine-scale MH ancestry의 결정 변수."
