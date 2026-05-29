@@ -4,7 +4,7 @@
 **최종 갱신**: 2026-05-29 (Opus 4.8)
 **재현**: 모든 코드 `main` 브랜치, uv 환경(`microhapdb==0.12`, torch 2.12.0+cu130). 결과 JSON은 `results/`(gitignored), 코드/스크립트 커밋됨. 72 pytest green.
 
-> **한 줄 요약**: (1) 동아시아 5집단 fine-scale 분류는 본질적으로 어려움 — 최고 정확도 ~57%(genome-wide, chance 20%). (2) **RandomForest가 XGBoost를 정확도·OSR 모두에서 앞섬**(56.6% vs 52.0%, AUROC 0.74 vs 0.60). (3) Conformal coverage 보장은 작동하고 marker↑로 set이 좁아짐. (4) Open-set은 base model에 크게 의존(약점이 부분적으로 모델 선택 문제). (5) **PCA·딥러닝(FM)은 소데이터에서 tree 앙상블을 못 이김** — 낮은 정확도가 곧 "단정 분류 대신 신뢰구간·거부가 필요"라는 본 연구 전제의 정량적 입증.
+> **한 줄 요약**: (1) 동아시아 5집단 fine-scale 분류는 본질적으로 어려움 — 최고 정확도 ~57%(genome-wide, chance 20%). (2) **RandomForest가 XGBoost를 정확도·OSR 모두에서 앞섬**(정확도 56.6% vs 52.0%; Plan 2 far-OOD AUROC **0.803 vs 0.695**, **empty-set reject가 RF에서 처음 발화**). (3) Conformal coverage 보장은 작동하고 marker↑로 set이 좁아짐. (4) **Open-set 약점은 상당 부분 base model 문제** — base만 RF로 바꾸면(한 줄) 개선. (5) **PCA·딥러닝(FM)은 소데이터에서 tree 앙상블을 못 이김** — 낮은 정확도가 곧 "단정 분류 대신 신뢰구간·거부가 필요"라는 본 연구 전제의 정량적 입증.
 
 ---
 
@@ -103,10 +103,22 @@ synthetic: SSL loss 11.47→6.52; finetune acc 0.36→0.92; **ConformalClassifie
 | FM | 0.263 | 0.947 | 4.45 | 0.532 |
 → **FM이 XGBoost에 짐**(소데이터 504로 transformer 과적합; 어댑터는 masked-only SSL). 두 모델 절대치가 낮은 건 **high-Ae 패널이 약하기 때문**(Ae=집단 내 다양성 ≠ 집단 간 FST). FM의 활로 = unlabeled 데이터 확장(all-2504/NYGC) + contrastive 활성화(Plan 3b-extended).
 
-## 11. Exp 11 — RandomForest base로 Plan 2 재산출 (진행 중)
-RF가 model-zoo에서 OSR 최고(0.736)였으므로, Plan 2 전 지표(coverage/far-OOD/LOPO)를 RF base로 재산출 중(`scripts/16`, `results/baseline/plan2_rf_vs_xgb.json`).
-**검정 질문**: RF의 향상된 보정이 (i) far-OOD AUROC를 0.695↑, (ii) empty-set reject를 0→>0, (iii) LOPO gap을 0→>0 으로 발화시키는가?
-> **[결과 나오면 보강]**
+## 11. Exp 11 — RandomForest base로 Plan 2 재산출 (완료)
+`results/baseline/plan2_rf_vs_xgb.json` — 동일 데이터·인코딩·split, **base_estimator만 교체**:
+
+| 지표 | XGBoost | **RandomForest** |
+|---|---|---|
+| coverage @α=0.1 | 0.888 | 0.908 |
+| set size @α=0.1 | 2.61 | **2.45** (더 좁음) |
+| far-OOD MSP AUROC | 0.695 | **0.803** |
+| far-OOD FPR@95TPR | 0.75 | **0.572** |
+| empty-set OOD reject | **0** (전 α) | **발화** — α=0.3 →0.21, α=0.2 →0.02 (in-dist ≤0.02) |
+| LOPO near-OOD gap | 0 (전 집단) | CHS **0.048** (나머지 0) |
+
+→ **RF가 trustworthy 축을 실질 개선**: far-OOD AUROC **+0.11**, FPR@95 0.75→**0.57**, **empty-set reject 0→발화**(XGBoost는 전혀 안 됨), near-OOD도 CHS에서 미약 검출. set도 더 좁음.
+**핵심 결론**: §4·§5의 OSR 약점은 방법의 한계가 아니라 **상당 부분 base model(XGBoost 과확신) 문제**였고, model-agnostic trust layer에서 **base만 RF로 바꾸면(한 줄) 개선**된다.
+주의: RF는 α=0.05에서 coverage 0.928(<0.95) — 소표본 per-class calibration으로 약간 under-cover → 운영 α=0.10 권장.
+**상태 ✅ — RandomForest를 권장 base로.**
 
 ## 12. 관련 연구 비교 — Chen et al. 2025 (Human Genomics, 95.6%)
 경쟁작의 95.6%는 **직접 비교 불가**: (a) **9개 광역·언어계통 클러스터**(중앙아·시베리아·동남아 포함, FST 높음) 분류, (b) **AISNP 2,000개 + PCA/ADMIXTURE** 피처, (c) Human Origins(array) 1,703명/67집단. 그들도 근연 그룹 sensitivity는 **0.66~0.87**. 우리 과제(1000G EAS-5, low FST, MH)와 입도·마커·데이터가 모두 다름. **차별점**: calibrated UQ/OSR + Reliable-Ae + forensic admissibility(경쟁작 부재).
@@ -139,7 +151,7 @@ uv run python scripts/16_plan2_rf.py            # RF vs XGB Plan 2 (Exp 11)
 산출: `results/baseline/*.json`, `results/conformal/*.json`.
 
 ## 16. 다음 실험
-1. **§11 RF Plan 2 재산출 결과 반영** + 유리하면 base를 RF로 채택.
+1. **base 모델을 RandomForest로 채택** (§11 완료 — OSR 대폭 개선). Plan 2 trust layer 기본 base를 RF로 변경 + 제안서 개정본 반영. (α=0.05 under-cover는 cal 분할 키워 점검.)
 2. **데이터 확장 + contrastive**(all-2504/NYGC unlabeled → contrastive 사전학습 → EAS finetune) — FM의 유일한 활로.
 3. **Deep Ensembles/MC-Dropout UQ**(aleatoric vs epistemic; forensic ancestry 선행 0편) — trustworthy 축 강화.
 4. **NYGC trio** → Reliable-Ae phasing penalty 정식 산출.
