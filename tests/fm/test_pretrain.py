@@ -11,6 +11,7 @@ def _setup():
             ["A|T", "C|C", "C|C"], ["T|T", "G|C", "T|T"]] * 4  # 16 samples
     v = FMVocab(rows, k=4)
     ds = MHMatrixDataset(rows, v, seed=0)
+    torch.manual_seed(0)   # seed encoder init too (else decreasing-loss test is order-dependent)
     enc = MHTransformer(n_markers=3, k=4, d_model=16, n_layers=1, n_heads=2)
     return enc, ds
 
