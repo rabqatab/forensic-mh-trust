@@ -818,7 +818,7 @@ requires-dist = [
     { name = "jupyterlab", marker = "extra == 'dev'" },
     { name = "mapie", specifier = ">=0.9" },
     { name = "matplotlib", specifier = ">=3.9" },
-    { name = "microhapdb", specifier = ">=0.7" },
+    { name = "microhapdb", specifier = "==0.12" },
     { name = "numpy", specifier = ">=1.26" },
     { name = "pandas", specifier = ">=2.2" },
     { name = "pysam", specifier = ">=0.22" },
