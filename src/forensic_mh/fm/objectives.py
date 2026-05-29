@@ -24,6 +24,7 @@ def nt_xent(z1: torch.Tensor, z2: torch.Tensor, tau: float = 0.5) -> torch.Tenso
     """Normalized temperature-scaled cross-entropy (SimCLR) for a batch.
 
     z1, z2: (B, d) embeddings of two views. Positive pair = (z1[i], z2[i]).
+    Requires batch size B >= 2; with B=1 there are no negatives and the loss degenerates to ~0.
     """
     z1 = F.normalize(z1, dim=1)
     z2 = F.normalize(z2, dim=1)

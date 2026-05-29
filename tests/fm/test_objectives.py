@@ -14,7 +14,11 @@ def test_masked_loss_zero_when_logits_perfect_on_masked_only():
             logits[n, m, targets[n, m]] = 10.0
     loss = masked_marker_loss(logits, targets, mask_pos)
     assert loss.item() < 1e-3          # near zero
-    assert loss.requires_grad is False or loss.item() >= 0
+    # confirm backward works: grad must be populated on a requires_grad input
+    g = torch.full((N, M, K), -10.0, requires_grad=True)
+    loss2 = masked_marker_loss(g, targets, mask_pos)
+    loss2.backward()
+    assert g.grad is not None
 
 
 def test_masked_loss_ignores_unmasked_positions():
@@ -25,6 +29,16 @@ def test_masked_loss_ignores_unmasked_positions():
     bad = good.clone(); bad[0, 1] = torch.tensor([-10.0, 10, -10])  # wrong at unmasked
     assert torch.allclose(masked_marker_loss(good, targets, mask_pos),
                           masked_marker_loss(bad, targets, mask_pos))
+
+
+def test_masked_loss_zero_when_nothing_masked_is_autograd_safe():
+    logits = torch.randn(2, 3, 4, requires_grad=True)
+    targets = torch.zeros(2, 3, dtype=torch.long)
+    mask_pos = torch.zeros(2, 3, dtype=torch.bool)
+    loss = masked_marker_loss(logits, targets, mask_pos)
+    assert loss.item() == 0.0
+    loss.backward()                 # must not raise (grad_fn preserved)
+    assert logits.grad is not None
 
 
 def test_nt_xent_lower_when_positives_aligned():
