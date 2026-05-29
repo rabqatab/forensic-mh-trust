@@ -9,16 +9,23 @@ from sklearn.model_selection import train_test_split
 from xgboost import XGBClassifier
 
 from forensic_mh.eval.lopo import leave_one_population_out
-from forensic_mh.pipelines.baseline import build_diplotype_matrix, load_eas_labels
+from forensic_mh.pipelines.baseline import (
+    build_genome_wide_matrix,
+    discover_chrom_vcfs,
+    load_eas_labels,
+)
 from forensic_mh.uq.conformal_classifier import ConformalClassifier
 from forensic_mh.uq.openset import reject_rate
 
-VCF = "data/eas/EAS_chr22.vcf.gz"
+EAS_DIR = "data/eas"
 PANEL = "data/1000g/integrated_call_samples_v3.20130502.ALL.panel"
 
 
 def main() -> None:
-    X, sids, markers = build_diplotype_matrix(VCF, "chr22")
+    vcfs = discover_chrom_vcfs(EAS_DIR)
+    print(f"genome-wide EAS VCFs: {len(vcfs)} chroms {sorted(vcfs, key=int)}")
+    X, sids, markers = build_genome_wide_matrix(vcfs)
+    print(f"X: {X.shape[0]} samples × {X.shape[1]} markers")
     y, pops = load_eas_labels(PANEL, sids)
     base = XGBClassifier(n_estimators=200, max_depth=4, learning_rate=0.1,
                          eval_metric="mlogloss", verbosity=0, random_state=42)

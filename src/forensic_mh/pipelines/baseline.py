@@ -135,6 +135,24 @@ def build_genome_wide_matrix(
         X, sample_ids_out, marker_names  (same shape contract as
         build_diplotype_matrix, columns spanning all chromosomes).
     """
+    merged_rows, all_marker_names = collect_genome_wide_strings(
+        vcf_paths, sample_ids, build)
+    X, sample_ids_out = _encode(merged_rows, all_marker_names)
+    return X, sample_ids_out, all_marker_names
+
+
+def collect_genome_wide_strings(
+    vcf_paths: dict[str, str],
+    sample_ids: Optional[list[str]] = None,
+    build: str = "hg19",
+) -> tuple[dict[str, dict[str, str]], list[str]]:
+    """Collect genome-wide diplotype STRINGS without encoding.
+
+    Returns (merged_rows, marker_names) where merged_rows[sample][marker]='h0|h1',
+    markers concatenated in sorted chromosome order. Used when a caller needs a
+    SHARED encoder across groups (e.g. fit a DiplotypeEncoder on EAS strings and
+    transform OOD strings for open-set evaluation).
+    """
     merged_rows: dict[str, dict[str, str]] = {}
     all_marker_names: list[str] = []
     for chrom in sorted(vcf_paths, key=_chrom_sort_key):
@@ -142,8 +160,7 @@ def build_genome_wide_matrix(
         all_marker_names.extend(names)
         for sid, marker_map in rows.items():
             merged_rows.setdefault(sid, {}).update(marker_map)
-    X, sample_ids_out = _encode(merged_rows, all_marker_names)
-    return X, sample_ids_out, all_marker_names
+    return merged_rows, all_marker_names
 
 
 def load_eas_labels(

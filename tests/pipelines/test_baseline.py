@@ -2,8 +2,24 @@ import forensic_mh.pipelines.baseline as b
 from forensic_mh.pipelines.baseline import (
     _encode,
     build_genome_wide_matrix,
+    collect_genome_wide_strings,
     discover_chrom_vcfs,
 )
+
+
+def test_collect_genome_wide_strings_merges_and_orders(monkeypatch):
+    fake = {
+        "1": ({"s1": {"m1": "A|A"}}, ["m1"]),
+        "2": ({"s1": {"m2": "C|C"}, "s2": {"m2": "T|T"}}, ["m2"]),
+    }
+    monkeypatch.setattr(
+        b, "_collect_chrom",
+        lambda vcf_path, chrom, sample_ids, build: fake[chrom.replace("chr", "")],
+    )
+    rows, names = collect_genome_wide_strings({"2": "v2", "1": "v1"})
+    assert names == ["m1", "m2"]               # sorted chromosome order
+    assert rows["s1"] == {"m1": "A|A", "m2": "C|C"}  # merged across chroms
+    assert rows["s2"] == {"m2": "T|T"}
 
 
 def test_discover_chrom_vcfs_maps_chrom_to_path(tmp_path):
