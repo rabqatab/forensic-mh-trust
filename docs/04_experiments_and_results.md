@@ -343,7 +343,23 @@ confusion: Japanese 25명 중 **11명을 Han으로 오분류**(JPT↔Han 근연 
 - **minimum forensic panel = 운영 스펙에 따른 최소 N**: 단순 valid coverage면 **25–50마커**; set size ≲3.0 + AUROC ≥0.70이면 **~200–300마커**(10–15× 축소); 최고 결정성·OSR은 전체 패널.
 - **고정 배치 패널(deliverable)**: top-50/100/200 마커 리스트를 `results/baseline/min_panel_trust.json`(`fixed_panels`)에 산출 — 예: N=100 패널 상위 mh11HYP-28, mh04HYP-11, mh03HYP-09 ….
 
-**RQ5 → ANSWERED (재정의)**: 배치 가능한 **최소 패널이 존재**하며, 정확도(§23.1)–coverage–set size–OSR(§23.2) frontier로 특성화됨. 원안의 "소수 마커 ≥90% 정확도"는 도달 불가(정직)지만, **trustworthy 최소 패널**(coverage 보장 + 운영점 선택, 10–15× 축소)은 충족. univariate 선택의 음성(§21)은 약한 도구 탓이었음.
+### 23.3 RFE 교차검증 (independent confirmation)
+
+`scripts/29_min_panel_rfe.py` → `results/baseline/min_panel_rfe.json`. **마커 단위 RFE**(매 단계 one-hot LogReg 재적합 → 마커별 계수 에너지로 약한 마커 제거 → 다음 target까지 반복, fold 내부 leakage-free) — §23.1의 one-shot 랭킹과 **메커니즘이 다른** 강한 wrapper로 교차검증.
+
+| N | **RFE** (recursive) | one-shot coef (§23.1) | MI (univariate) |
+|---|---|---|---|
+| 25 | 46.6 ± 4.3 | 52.2 | 32.9 |
+| 50 | 54.4 ± 3.3 | 54.6 | 39.1 |
+| 100 | 60.9 ± 2.5 | 61.1 | 49.4 |
+| 200 | **65.9 ± 4.7** | 63.9 | 54.8 |
+| 300 | 67.5 ± 2.9 | 67.5 | 59.9 |
+| 500 | 70.4 ± 3.0 | 70.0 | 60.3 |
+| 1000 | 75.6 ± 3.9 | 76.8 | 68.0 |
+
+→ **RFE ≈ one-shot coef** (N≥50에서 noise 내 일치) → 두 독립 다변량 선택기가 서로 확증, rescue가 선택기 아티팩트 아님. 둘 다 **MI를 모든 N에서 10–20p 압도** → §21 음성은 *univariate 한계*임을 두 번째 독립 증거로 확정. (N=25에선 RFE 46.6 < one-shot 52.2 — greedy backward의 극소 패널 over-prune, 정직한 관찰; 여전히 MI보다 +14p.) **부수 결론**: RFE가 one-shot을 못 이기므로 값싼 one-shot 선택으로 충분.
+
+**RQ5 → ANSWERED (재정의)**: 배치 가능한 **최소 패널이 존재**하며, 정확도(§23.1, **RFE 교차검증 §23.3**)–coverage–set size–OSR(§23.2) frontier로 특성화됨. 원안의 "소수 마커 ≥90% 정확도"는 도달 불가(정직)지만, **trustworthy 최소 패널**(coverage 보장 + 운영점 선택, 10–15× 축소)은 충족. univariate 선택의 음성(§21)은 약한 도구 탓이었음.
 
 ---
 

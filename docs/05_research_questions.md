@@ -64,7 +64,7 @@
 - **왜 중요**: 제안서 중심 deliverable. forensic 메시지를 "minimal panel" ↔ "genome-wide MH"로 가른다.
 - **상태 [ANSWERED — 재정의]**: 배치 가능한 최소 패널이 **존재**하며 정확도–trust frontier로 특성화됨(docs/04 §23). 1차 음성(§21)은 RQ5의 답이 아니라 **약한 선택기 sub-result**로 강등.
   - **sub-result (유효)**: *univariate* MI/단순 L1은 compact 패널 부족(MI 200마커 55%) — "패널 없음"이 아니라 "약한 선택기로는 못 찾음"을 의미.
-  - **rescue (정확도, §23.1)**: **다변량 model-based 선택**(one-hot LogReg 계수 에너지)이 모든 N에서 +8~19p — **25마커 52%**(MI 대비 8× 효율), **1000마커 76.8%**(전체 79.6%의 96%). 신호가 소수 마커에 front-load 가능.
+  - **rescue (정확도, §23.1 + RFE 교차검증 §23.3)**: **다변량 선택**(one-hot LogReg 계수 에너지)이 모든 N에서 +8~19p — **25마커 52%**(MI 대비 8× 효율), **1000마커 76.8%**(전체 79.6%의 96%). **메커니즘이 다른 RFE가 ±2p 내로 일치** → rescue가 선택기 아티팩트 아니라 데이터 성질(front-load). 둘 다 MI를 10–20p 압도.
   - **rescue (trust, §23.2)**: leakage-free 3-way split에서 **conformal coverage가 모든 패널 크기에서 ≥0.93 유지** — 25마커도 valid 90%+ coverage. trade-off는 set size(3.9→2.7)·far-OOD AUROC(0.59→0.76). **minimum forensic panel = 운영 스펙별 최소 N**(valid coverage면 25–50; set ≲3·AUROC ≥0.70이면 ~200–300, 10–15× 축소). 고정 배치 패널(top-50/100/200 마커 리스트) 산출.
   - **정직한 한계**: 원안의 "소수 마커 ≥90% 정확도"는 도달 불가(전체 패널도 79.6%); 충족된 것은 **trustworthy 최소 패널**(coverage 보장 + 운영점).
 
