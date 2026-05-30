@@ -388,6 +388,10 @@ confusion: Japanese 25명 중 **11명을 Han으로 오분류**(JPT↔Han 근연 
 | SupAE (Neural-ADMIXTURE / popVAE) | 32.5 ± 5.5 | 0.541 |
 | Transformer (supervised) | 51.0 ± 4.7 | 0.575 |
 | **Transformer (SSL+finetune = our FM)** | **54.6 ± 6.0** | 0.576 |
+| ResNet-tabular (Gorishniy 2021) | 33.5 ± 5.5 | 0.475 |
+| ResCNN (deep residual popgen-CNN) | 22.8 ± 6.4 | 0.541 |
+
+(추가 `scripts/39`: **ResNet-tabular**(FT-Transformer의 co-SOTA)·**깊은 residual CNN**도 33.5/22.8% — 완패. embedding+pooling 기반 DL(EmbMLP·SupAE·ResNet-tab·ResCNN)이 22–34%로, one-hot sklearn MLP(50–56%)보다도 낮음 → §24.3의 "embedding bottleneck이 손해" 재확인: *표현이 아키텍처 깊이보다 중요*.)
 
 ### 24.4 Linear family + 정규화 sweep (RQ3 — 선형 *클래스* 우위) — `extended_zoo.json`
 "LogReg 운빨인가, 선형 클래스인가?" `scripts/35`, one-hot 5-fold.
