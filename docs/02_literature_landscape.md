@@ -400,3 +400,25 @@ Ancestry용 표준 informativeness measure는:
 - Olsson et al. (2025) Frontiers Bioinf — CP-in-genomic-medicine 최초(forensic 미적용, 6부 기재).
 - Liu et al. (2024) IJCV — open-set/OOD 서베이(6부 기재).
 > Paper 1 인용은 모두 `paperwork/Paper1_draft` §References의 [verify] 절차로 확정.
+
+### 8-E. LexiconArxiv ML-method 선행연구 (arxiv-verified, 2026-05-30)
+
+> arxiv ML 코퍼스(LexiconArxiv) 광범위 검색으로 확인된 **우리 방법론 축**의 원전. forensic 유전학(bio 저널)은 1~7부, 여기는 conformal·open-set·tabular-DL·SSL·calibration. (코퍼스 메타 = 제목·저자·venue·연도 확인; citation 수는 코퍼스 내 값. 최종본은 CrossRef 재확인.)
+
+**Small-data tabular (RQ3 — 추가 테스트 후보)**
+- **TabPFN** (Hollmann et al., ICLR 2023 notable top-25%) — 소표본 tabular 분류 SOTA(prior-fitted transformer). **n=504가 정확히 이 regime** → "소표본 tabular SOTA조차 선형에 지는가" 검증에 강력. (단 feature 한도로 **축소 패널(top-N) 필요**.) + TabPFN v2 (Ye et al., NeurIPS 2025), TuneTables (NeurIPS 2024).
+- **NODE** (Popov et al., ICLR 2020); **TabReD** (Rubachev et al., ICLR 2025 Spotlight) — tabular-DL 벤치마크 *함정* 경고(우리 fair-comparison 주의와 직결).
+
+**Tabular SSL (Paper 2 직접 근거)**
+- **Scarf** (Bahri et al., ICLR 2022 Spotlight) — random feature corruption 대조학습. **우리 ADO-augmentation 대조학습의 명명된 직접 선행**(ADO≈Scarf corruption).
+- **T-JEPA** (ICLR 2025, augmentation-free tabular SSL); **XTab** (ICML 2023, FT-Transformer cross-table pretrain); **Tabula** (NeurIPS 2025, single-cell tabular SSL FM — 유전체 인접); **TabDPT** (NeurIPS 2025, tabular FM scaling).
+
+**Conformal under distribution shift (RQ6 ADO의 원리적 fix)**
+- **Gibbs & Candès (NeurIPS 2021 Oral)** *Adaptive Conformal Inference Under Distribution Shift* — exchangeability 깨질 때 coverage 회복의 정준. **§4.5(ADO 50%에서 cov 0.91→0.80)의 직접 처방** → RQ6 "한계"를 "weighted/adaptive conformal로 처방 가능한 future work"로 격상.
+- **Wasserstein-Regularized CP** (ICLR 2025); **Not all distributional shifts are equal** (Ai & Ren, ICML 2024); **CoDrug** (NeurIPS 2023, covariate-shift conformal in drug); **Conformal Validity for Any Distribution** (Prinster et al., ICML 2024); **Kandinsky CP** (ICML 2025, class/covariate-conditional 넘어 — Mondrian 일반화).
+
+**OOD/calibration (RQ4)**: **Lee et al. (ICLR 2018)** *Training Confidence-calibrated Classifiers for Detecting OOD*; **DUQ** (van Amersfoort et al., ICML 2020 — 단일 결정 신경망 불확실성, 우리 실패한 deep-ensemble 대안); **EGonc** (NeurIPS 2024, energy-based open-set — 제안서 원안의 energy 아이디어).
+
+**DNA LM (novelty 옵션3 landscape)**: NucEL (AAAI 2026), MxDNA (NeurIPS 2024) — DNA 사전학습(우리 마커는 원시서열 아니라 직접 적용은 아님).
+
+> **활용 액션**: (a) **TabPFN을 축소 패널(top-200)로 추가 테스트**; (b) **Scarf를 Paper 2 SSL 근거로 인용**; (c) **Gibbs-Candès를 §4.5 RQ6 future-work 처방으로 인용**.
