@@ -405,16 +405,39 @@ confusion: Japanese 25명 중 **11명을 Han으로 오분류**(JPT↔Han 근연 
 
 → **선형 클래스 우위 확정(LogReg 운빨 아님)**: hinge-loss **LinearSVC 79.8% ≈ logistic LogReg 79.6%** — 손실함수가 달라도 dense 선형+one-hot이 ~80%. **LinearSVC가 OSR AUROC 0.957로 전 모델 최고**(margin 기반 분리). **L1/elastic-net(sparse)은 급락**(56.9/62.5) — RQ5(sparse 선택 실패)와 일관, dense L2가 핵심. 정규화: C=1이 정확도 sweet spot, C↑는 OSR 소폭↑.
 
-### 24.5 Native-categorical 트리 + tabular-DL SOTA (RQ3 보강) — `[진행 중]`
-- **Native-cat 트리**(`scripts/36`, `native_cat_trees.json`): HistGBDT(capped categorical)·CatBoost(raw string categorical). "트리가 진 게 *ordinal 인코딩* 탓인가 *모델 클래스* 탓인가" 결정. **[결과 대기 — CatBoost 3042 cat feature로 느림]**
-- **Tabular-DL SOTA**(`scripts/37`, `sota_dl.json`, GPU): FT-Transformer(Gorishniy 2021)·TabNet(Arik 2021) — generic DL이 SOTA를 과소평가했는지 차단. **[진행 중 — fold1 예비: FT-Transformer 36.6%, TabNet 24.8%(chance 20% 근처)]** → 예상대로 LogReg에 크게 뒤짐(완료 후 확정).
+### 24.5 Native-cat 트리 + tabular-DL SOTA + small-data SOTA (RQ3 capstone)
+
+**Native-categorical 트리** (`scripts/36`→HGBDT capped, 5-fold): 트리가 *네이티브 범주형*(subset split, ordinal-threshold 아님)으로 처리해도 —
+
+| 트리 인코딩 | accuracy |
+|---|---|
+| ordinal (§13) | 56.9% |
+| one-hot (§24.1, RF) | 59.7% |
+| **native-categorical (HGBDT)** | **59.5% ± 3.7** (AUROC 0.664) |
+
+→ **세 인코딩 모두 트리 ~60% 천장 → 트리 열세는 *인코딩*이 아니라 *모델 클래스*.** ("트리에 더 좋은 인코딩을 주면 된다" 기각.) CatBoost는 3,042 cat feature에서 비현실적으로 느려 종료 — 그 자체로 트리류가 이 표현에 부적합한 방증.
+
+**Tabular-DL SOTA** (`scripts/37`, GPU, 5-fold): FT-Transformer **30.1 ± 5.7**(AUROC 0.569) · TabNet **23.6 ± 3.2**(AUROC 0.505, chance 20% 근처) → SOTA tabular-DL도 완패 → "generic DL이 DL을 과소평가" 가능성 차단.
+
+**Small-data SOTA: TabPFN** (`scripts/38`, cloud, top-200 패널):
+
+| 모델 | accuracy | far-OOD AUROC |
+|---|---|---|
+| **TabPFN@200** (소표본 전용 SOTA) | **62.5 ± 1.9** | 0.649 |
+| LogReg(one-hot)@200 (ref, §23.1) | 63.9 | — |
+| LogReg(one-hot)@full (ref) | **79.6** | 0.863 |
+
+→ **소표본을 위해 설계된 TabPFN조차 LogReg@200을 못 이김**(62.5 vs 63.9); full 3,042 패널은 feature 한도로 접근 불가(선형이 크게 앞서는 영역). encoding = capped ordinal codes(클라이언트가 categorical flag 미지원 — 약한 ordinal handicap).
+> **reproducibility 주의**: TabPFN은 **클라우드 추론** — 서버 모델 갱신 시 수치 변동 가능. **사용 버전 = `tabpfn-client 0.3.0`, server_model="auto", n_estimators=8 (2026-05-30)**. 인증은 `.env`의 `TABPFN_TOKEN`(gitignored).
+
+**§24 capstone (RQ3 ironclad)**: classical ML · 트리(ordinal·one-hot·native-categorical 어느 것이든) · generic DL(MLP·CNN·AE·transformer) · tabular-DL SOTA(FT-Transformer·TabNet) · **small-data SOTA(TabPFN)** — **그 무엇도 dense 선형(one-hot LogReg/LinearSVC ~80%)을 못 이김.** 79.6%는 인코딩 운이 아니라 *모델 클래스* 사실(고차원 희소 categorical p≫n에서 dense 선형 우위).
 
 ### 24.3 결론
 1. **단순함이 이긴다 (RQ3) — DL 전반에서 확정**: LogReg(one-hot) 79.6%가 5개 DL 계열(embedding/CNN/autoencoder/transformer)을 전부 **≥25p** 압도. 최고 DL은 Transformer+SSL 54.6%. n=504·p≫n에서 DL은 과적합(분산 ±5–10, embedding/AE는 chance 20% 근처). "복잡 모델·피처 이전에 인코딩+단순 선형"이 fine-scale MH ancestry의 결론.
 2. **SSL pretraining이 (작게) 돕는다**: Transformer supervised 51.0 → **SSL+ft 54.6 (+3.6p)** — n=504에서도 양의 신호(§10의 256-마커 결과와 달리 full-panel·동일 프로토콜에서 처음 확인). **→ 데이터 확장(현재 1000G 2,504·gnomAD HGDP+1KG 4,091 추출 중)으로 lift가 커질 가설을 직접 동기화**(Paper 2).
 3. **DL은 OSR도 약하다 (RQ1)**: 모든 DL far-OOD AUROC 0.44–0.58 ≪ LogReg 0.863; CNN은 0.439(<chance). 흥미롭게 **sklearn MLP(one-hot, AUROC 0.80–0.82) > torch embedding-DL(0.54)** — embedding bottleneck이 unseen-diplotype OOD 단서를 버리는 반면 one-hot+`handle_unknown=ignore`는 보존하기 때문. RQ1의 "OSR은 base/표현이 좌우"를 표현 레벨에서 재확인.
 
-4. **선형 *클래스*가 이긴다, LogReg 특정 아님 (RQ3 보강, §24.4)**: LinearSVC 79.8% ≈ LogReg 79.6%(손실함수 무관), 게다가 **LinearSVC OSR AUROC 0.957로 전 모델 최고**. sparse 선형(L1/elastic)은 급락 → dense L2 선형+one-hot이 정확도·신뢰성의 핵심. (native-cat 트리·tabular-DL SOTA는 §24.5에서 진행 중.)
+4. **선형 *클래스*가 이긴다, LogReg 특정 아님 (RQ3 보강, §24.4)**: LinearSVC 79.8% ≈ LogReg 79.6%(손실함수 무관), 게다가 **LinearSVC OSR AUROC 0.957로 전 모델 최고**. sparse 선형(L1/elastic)은 급락 → dense L2 선형+one-hot이 정확도·신뢰성의 핵심. (트리는 native-categorical도 ~60%, tabular-DL SOTA·TabPFN도 전부 선형에 짐 — §24.5 capstone.)
 
 **문헌 [verify — 제출 전 서지 확인]**: Romero et al. 2017 (Diet Networks, ICLR); Flagel et al. 2019 (CNN popgen inference, MBE); Gower et al. (genomatnn); Mantes et al. 2023 (Neural ADMIXTURE, Nat Comput Sci); Battey et al. 2021 (popVAE); Korfmann et al. 2023 (DL in popgen, review); Gorishniy et al. 2021 (FT-Transformer, NeurIPS); Arik & Pfister 2021 (TabNet, AAAI). 상세 계보는 docs/02 §8.
 

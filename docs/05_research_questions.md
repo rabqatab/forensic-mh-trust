@@ -50,7 +50,7 @@
 
 - **질문**: 오래 갇혀 있던 ≈57% 정확도 천장은 동아시아 fine-scale의 본질적 한계(낮은 FST)인가, 아니면 명목형 diplotype을 ordinal로 인코딩한 아티팩트인가? 정확도와 신뢰를 동시에 최대화하는 표현은?
 - **왜 중요**: 핵심 enabler이자 독립적 "simplicity result". 천장이 아티팩트면 제안서의 비관적 정확도 목표 해석 자체가 바뀐다.
-- **근거 [ANSWERED]**: §13/부록 A. one-hot(no scaler)+LogReg **79.6%** vs ordinal-tree ≈57% → **아티팩트**. StandardScaler-on-one-hot은 선형/커널 모델을 붕괴(46.6%). PCA/SVD 피처도 무익(§4.7). **DL 5계열(MLP·CNN·embedding·autoencoder·transformer)도 전부 LogReg에 ≥25p 짐**(§24) — 단순함이 DL 전반에 우위. **선형 *클래스* 우위 확정**(LinearSVC 79.8≈LogReg 79.6, 손실함수 무관; LinearSVC OSR AUROC 0.957 최고; sparse 선형은 급락 — §24.4). → **권장 recipe: one-hot, no scaler, dense regularized linear.**
+- **근거 [ANSWERED]**: §13/부록 A. one-hot(no scaler)+LogReg **79.6%** vs ordinal-tree ≈57% → **아티팩트**. StandardScaler-on-one-hot은 선형/커널 모델을 붕괴(46.6%). PCA/SVD 피처도 무익(§4.7). **DL 5계열(MLP·CNN·embedding·autoencoder·transformer)도 전부 LogReg에 ≥25p 짐**(§24) — 단순함이 DL 전반에 우위. **선형 *클래스* 우위 확정**(LinearSVC 79.8≈LogReg 79.6, 손실함수 무관; LinearSVC OSR AUROC 0.957 최고; sparse 선형은 급락 — §24.4). **트리 열세는 *모델 클래스***(native-categorical HGBDT도 59.5% — 인코딩 무관, §24.5); **tabular-DL SOTA(FT-Transformer/TabNet)·small-data SOTA(TabPFN)도 전부 dense 선형에 짐**(§24.5 capstone). → **권장 recipe: one-hot, no scaler, dense regularized linear.**
 
 ### RQ4 — 보정(ECE)과 open-set 분리(AUROC)는 같은 축인가?
 
