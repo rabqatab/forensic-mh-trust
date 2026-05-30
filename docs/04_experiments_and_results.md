@@ -16,7 +16,7 @@
 | RQ2 | conformal이 저정확도에서도 목표 커버리지 | **§3**, §21 | — |
 | RQ3 | 57% 천장은 인코딩 artifact; one-hot+linear 우위 | **§13**, 부록 A | §7·§8·§9 *(superseded/보조)* |
 | RQ4 | ECE ≠ open-set 분리 | **§14** | — |
-| RQ5 | compact 최소 패널 없음(genome-wide 필요) | **§21** | §7 *(superseded)* |
+| RQ5 | 최소 forensic 패널 존재 여부 — **재조사 중(PENDING)** | **§23**(강한 선택기) | §21 *(univariate sub-result)*, §7 |
 | RQ6 | conformal 보장이 ADO에서 graceful 저하 | **§15** | — |
 | RQ7 | HGDP 외부 코호트 전이 | **§22** *(preliminary, 82.4% @510마커)* | — |
 | (비-RQ) | SSL FM = Paper 2; Reliable-Ae = deferred | §6·§10(FM), §2(Ae) | — |
@@ -235,7 +235,9 @@ uv run python scripts/19_onehot_cv.py           # one-hot LogReg 5-fold CV (Exp 
 - LogReg가 set size(1.72, 최소)·AUROC·FPR95 모두 최고. XGBoost의 empty-set reject는 **정확히 0.000±0.000**(절대 발화 안 함) → tree류는 OOD에 과확신.
 - → Paper 1 §4.3 핵심 표에 error bar 확보.
 
-## 21. 최소 패널 — one-hot LogReg, leakage-free (B)  `[→ RQ5 · canonical]`
+## 21. 최소 패널 — one-hot LogReg, leakage-free (B)  `[→ RQ5 · sub-result: univariate 선택 부족 — §23이 대체]`
+
+> **갱신(2026-05-30)**: 아래는 *univariate MI/L1* 선택 기준 결과 — RQ5의 답이 아니라 **sub-result**(약한 선택기로는 compact 패널 부족)로 강등. 다변량 선택으로 패널이 살아남(§23). "compact 패널 없음"이라는 단정은 철회.
 
 `scripts/25_min_panel_logreg.py` → `results/baseline/min_panel_logreg.json`. fold 내부에서 mutual_info_classif(ordinal 행렬)로 marker top-N 선별(leakage-free) → 해당 컬럼만 one-hot LogReg, 5-fold.
 
@@ -261,8 +263,8 @@ uv run python scripts/19_onehot_cv.py           # one-hot LogReg 5-fold CV (Exp 
   | 0.2 | 268 | 55.0% ± 2.6 |
   | 0.5 | 474 | 56.9% ± 3.8 |
 
-  → **공동 선별(L1)이 개별 선별(MI)을 이기지 못함** (L1@268≈55.0% ≈ MI@200=54.8%; L1@474≈56.9% < MI@500=60.3%). ~70–470 marker 어느 지점에서도 ~57% 이하 → **고정확도(79.6%)는 전 패널 3042가 필수**. "최소 패널 → 79%" 가설 기각.
-  - **결론(확정)**: fine-scale EAS 판별 신호는 genome 전반에 분산되어 있어 compact subset이 담지 못함. Paper 1 forensic 함의 = **"genome-wide MH + calibrated UQ"** (minimal-panel 아님).
+  → **L1·MI 모두 univariate/단순 sparsity** — ~70–470 marker에서 ~57% 이하.
+  - **결론(철회 — §23 참조)**: 당시 "compact 패널 없음/genome-wide 필수"로 단정했으나, 이는 **약한 선택기**(개별 마커 평가)의 한계였다. **다변량 model-based 선택**은 같은 N에서 +8~19p 개선(25마커 52%, 1000마커 76.8%) — 신호가 소수 마커에 front-load 가능함을 보임(§23). RQ5는 PENDING으로 재조사.
 
 ---
 
@@ -291,6 +293,40 @@ confusion: Japanese 25명 중 **11명을 Han으로 오분류**(JPT↔Han 근연 
 - **한계**: Dai n=4(소표본, 1.0 recall 비신뢰), KHV(베트남) HGDP 매칭 없음, 예비(5/22 chroms).
 
 → RQ7 **preliminary ANSWERED** (전체 추출 후 final 갱신).
+
+---
+
+## 23. RQ5 재조사 — 강한 선택기로 최소 패널 살리기  `[→ RQ5]`
+
+`scripts/27_min_panel_strong.py`(정확도) + `scripts/28_min_panel_trust.py`(trust). §21의 음성결과는 **univariate MI**(각 마커를 독립 평가)에 기인 — p≫n 선형 문제에서 약하기로 유명. **다변량 model-based 선택**(fold-train에 전체 one-hot LogReg fit → 마커별 계수 에너지 Σ_class Σ_onehot w² 로 랭킹, fold 내부 = leakage-free)으로 재검.
+
+### 23.1 정확도 vs 패널 크기 (MI vs model-based, 5-fold)
+
+| N 마커 | MI (univariate) | **coef_l2 (다변량)** | gain |
+|---|---|---|---|
+| 25 | 32.9% | **52.2%** | **+19.2** |
+| 50 | 39.1% | 54.6% | +15.5 |
+| 75 | 41.9% | 57.3% | +15.5 |
+| 100 | 49.4% | 61.1% | +11.7 |
+| 150 | 52.6% | 62.9% | +10.3 |
+| 200 | 54.8% | 63.9% | +9.1 |
+| 300 | 59.9% | 67.5% | +7.6 |
+| 500 | 60.3% | 70.0% | +9.8 |
+| 1000 | 68.0% | 76.8% | +8.8 |
+| 3042 (전체) | — | **79.6%** | — |
+
+→ **model-based가 모든 N에서 +8~19p**. **25마커 52%**(MI는 동일 정확도에 ~200마커 필요 — **8× 효율**); **1000마커 76.8%** = 전체(79.6%)의 **96%**, 3× 축소. §21의 "plateau 없음/패널 없음"은 **약한 선택기 아티팩트** — 판별 신호는 소수 마커에 **front-load 가능**.
+**왜 정당한 교정인가(p-hacking 아님)**: MI는 마커를 *독립적으로* 평가해 조합·중복 제거 신호를 놓친다(univariate 필터의 교과서적 약점). model-based 랭킹은 전체 모델이 실제 가중한 마커를 고른다 → 다변량 신호 보존.
+
+### 23.2 forensic trust frontier (leakage-free 3-way split)
+
+패널 크기별 conformal **coverage + set size + far-OOD AUROC + empty-set reject**로 "배치 가능한 최소 패널"을 정의(top-1 정확도가 아니라 *신뢰성* 기준). 5-seed, α=0.10, model-based 선택.
+
+> **⚠ leakage 발견·수정**: 마커 선택을 conformal calibration과 **같은 데이터**에서 하면 cal 라벨이 score function에 누수 → coverage가 N↑에 따라 붕괴(0.91→0.60, 초기 버그). **3-way split(select / fit+cal / test, 서로 disjoint)**으로 수정(docs/06 C11).
+
+**[결과 갱신 예정 — leakage-free 재실행 진행 중]** 표: N | acc | coverage | set size | far-OOD AUROC | empty-set reject_OOD. 정의: minimum forensic panel = coverage ≥ 0.90을 유지하며 acceptable set size를 주는 최소 N.
+
+**RQ5 상태**: PENDING. 정확도 측 rescue 확인(§23.1) — trust frontier(§23.2) 확정 후 ANSWERED-positive 예정. + 고정 배치 패널(top-50/100/200 마커 리스트)을 `results/baseline/min_panel_trust.json`에 산출(실제 deliverable).
 
 ---
 

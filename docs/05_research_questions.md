@@ -22,10 +22,10 @@
 
 | 제안서 원안 RQ (암묵) | 원안 가정 | 실측 결과 | 현재 위상 |
 |---|---|---|---|
-| "동아시아 5집단을 ≥90% 정확도로 분류하는 **최소 MH 패널**은 몇 개인가?" | 소수 마커로 고정확도 가능 + 90% 달성 가능 | **고정확도엔 compact 패널 없음**; 정확도는 마커에 단조 증가, 79.6%(전체 3042, one-hot LogReg) | **falsified/재구성** → RQ-Panel (RQ5) |
+| "동아시아 5집단을 ≥90% 정확도로 분류하는 **최소 MH 패널**은 몇 개인가?" | 소수 마커로 고정확도 가능 + 90% 달성 가능 | univariate 선택으론 compact 패널 부족(MI/L1 ~55%@200); **강한 선택기·trust 목적함수로 재조사 중** | **PENDING(재조사)** → RQ5 |
 | "CP+OSR로 분류에 신뢰 수준을 부여한다" | base=XGBoost로 충분 | coverage는 충족, 그러나 **OSR은 base에 의해 좌우**(XGBoost 최악) | **확장/심화** → RQ1(핵심)·RQ2·RQ4 |
 
-**핵심 전환**: 제안서의 무게중심이던 "최소 패널"은 (인코딩 교정 후) **부차적·부정적 결과**로 내려가고, 부차적이던 "trustworthy 모델"이 — base-model 발견과 함께 — **논문의 핵심 기여**로 올라섰다.
+**핵심 전환**: 부차적이던 "trustworthy 모델"이 — base-model 발견과 함께 — **논문의 핵심 기여**로 올라섰다. 제안서 무게중심이던 "최소 패널"은 *univariate 선택 기준* 음성이지만 — **약한 도구의 한계일 수 있어 강한 선택기·trust 목적함수로 재조사 중(RQ5 PENDING)**; "없다"로 단정하지 않는다.
 
 ---
 
@@ -58,12 +58,13 @@
 - **왜 중요**: "왜 ensemble epistemic UQ가 아니라 conformal에 trust layer를 앵커하는가"의 근거. RQ1의 메커니즘 해명.
 - **근거 [ANSWERED]**: §4.4. 두 축 분리 — XGBoost ECE 최고(0.077)인데 OSR 최악(AUROC 0.695); deep-ensemble은 보정 좋아도 epistemic MI의 OOD AUROC≈0.36(<chance). → **ECE ≠ OSR. conformal coverage는 어느 쪽이든 유지되므로 trust layer를 거기에 앵커.**
 
-### RQ5 (Scope) — fine-scale 고정확도를 위한 compact "최소 패널"이 존재하는가?
+### RQ5 (Scope) — forensic 배치 가능한 최소 MH 패널이 존재하는가?
 
-- **질문**: 제안서의 핵심 산출물 — 소수 마커 패널로 높은 5집단 정확도가 가능한가, 아니면 판별 신호가 genome 전반에 분산되어 있는가?
-- **왜 중요**: 제안서 중심 deliverable의 직접 검정. 결과가 forensic 메시지를 "minimal panel" ↔ "genome-wide MH"로 가른다.
-- **가설(기각됨)**: (원안) 소수 마커로 고정확도 가능.
-- **근거 [ANSWERED]**: §21 + L1. MI-top-N 정확도 **plateau 없음**(100→49%, 1000→68%, 3042→79.6%); 70%+는 전 패널 필요. L1 공동 선별도 회복 실패(C=0.2, 268마커 55%). → **compact 패널 없음 — fine-scale EAS는 genome-wide MH 필요.** 제안서 "최소 패널" 메시지를 "genome-wide MH + calibrated UQ"로 재구성.
+- **질문**: 소수 마커 패널로 (i) 충분한 5집단 정확도, 또는 (ii) 충분한 trust(conformal coverage + 좁은 set + far-OOD 분리)를 **forensic 배치 규모(NGS ~50–200마커)**에서 달성할 수 있는가?
+- **왜 중요**: 제안서 중심 deliverable. forensic 메시지를 "minimal panel" ↔ "genome-wide MH"로 가른다.
+- **상태 [PENDING — 재조사 중]**: 1차 음성결과는 **약한 도구**에 기인하므로 RQ5의 *답*이 아니라 **sub-result로 강등**한다.
+  - **sub-result (유효)**: *univariate* MI-top-N 및 단순 L1은 plateau 없음(MI 200마커 55%, L1 268마커 55%) — **개별(univariate) 선별로는** compact 패널 부족(§21). 이는 "패널이 없다"가 아니라 "약한 선택기로는 못 찾는다"를 의미.
+  - **재조사 (진행)**: (a) **다변량 model-based 선택**(one-hot LogReg 계수 에너지)·RFE·stability selection이 같은 N에서 더 강한 패널을 찾는지(`scripts/27`); (b) 목적함수를 top-1 정확도가 아니라 **forensic trust**(coverage + set size + far-OOD AUROC)로 재정의해 "trust 스펙을 만족하는 최소 N"을 구함. → 결과에 따라 **ANSWERED(배치 패널 존재)** 또는 음성 확정. 진행은 docs/04 §23 예정.
 
 ### RQ6 (Robustness) — conformal 보장은 법과학적 열화(allele dropout)에서 살아남는가?
 
@@ -96,7 +97,7 @@
 | RQ2 | conformal이 저정확도에서도 목표 커버리지 | §4.3, §21 | ANSWERED |
 | RQ3 | 57% 천장은 인코딩 아티팩트; one-hot LogReg 79.6% | §13, 부록 A | ANSWERED |
 | RQ4 | ECE ≠ OSR 분리 | §4.4 | ANSWERED |
-| RQ5 | compact 최소 패널 없음(genome-wide 필요) | §21, L1(§21) | ANSWERED |
+| RQ5 | 최소 forensic 패널 존재 여부 (univariate 선택으론 부족 — sub-result) | §21, §23(진행) | PENDING |
 | RQ6 | conformal 보장이 ADO에서 graceful 열화 | §4.5 | ANSWERED |
 | RQ7 | HGDP 외부 코호트 전이 (82.4% @510마커) | §22 | PRELIMINARY |
 

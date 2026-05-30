@@ -15,7 +15,7 @@
 | A1 | "≈57% 정확도는 **FST 천장**(동아시아 fine-scale의 생물학적 한계)" | 인코딩 아티팩트였음 | 동일 데이터 one-hot LogReg **79.6%** (§13, 부록 A) | RQ3 |
 | A2 | "**XGBoost가 과확신**이라 OSR이 약하다(보정 불량)" | XGBoost가 ECE **최선**(0.077), RF가 최악(0.315) | §14. OSR 약점은 *보정*이 아니라 확률 *순위 분리*(AUROC) 문제 | RQ4 |
 | A3 | "base는 **RandomForest** 권장"(ordinal 비교 기준) | LogReg(one-hot)이 정확도·OSR **모두** 우위 | §11/§20 (AUROC 0.840 vs RF 0.757) | RQ1 |
-| A4 | "소수 마커 **최소 패널**로 고정확도 달성"(제안서 핵심 deliverable) | compact 패널 없음 — 정확도 단조 증가, 70%+는 전 패널 필요 | §21 (+L1 회복 실패) | RQ5 |
+| A4 | "소수 마커 **최소 패널**로 고정확도 달성"(제안서 핵심 deliverable) | **이중 정정**: (1차) univariate MI/L1로는 compact 패널 부족(§21) → 한때 "패널 없음"으로 단정. (2차, **자기정정**) 그 단정도 약한 선택기 탓 — **다변량 model-based 선택**은 25마커 52%·1000마커 76.8%(§23)로 패널이 살아남. **RQ5 재조사(PENDING)** | §21→§23 | RQ5 |
 | A5 | "open-set 약점은 **방법(conformal) 한계**" | base-model 문제 — base 교체(한 줄)로 해결 | §11/§20 (empty-set 거부 0→59%) | RQ1 |
 | A6 | "PCA/구조 피처가 도움"(Chen 2025 동기 가설) | MH one-hot엔 무익(최선 45.8% < raw 56.1%, −10p) | §8 | RQ3 |
 
@@ -53,6 +53,7 @@
 | C8 | HGDP 추출 `Xood` 행렬 오류 | 샘플 ID를 마커로 순회(`for m in sorted(orows)`) | `for m in names`로 수정 | `fb35f44` |
 | C9 | 백그라운드 작업 "완료" 오판 | nohup-detached launcher 조기 반환을 종료로 오독 | foreground until-loop로 **완료 마커 폴링** 후 보고 (프로세스 교훈) | — |
 | C10 | `python`/`pytest` 직접 실행 거부 | 프로젝트 uv 환경 미사용 | 전 스크립트 **`uv run`** 통일 | — |
+| C11 | 패널 크기별 conformal **coverage가 N↑에 따라 붕괴**(0.91→0.60) | **선택-calibration 누수**: 마커 선택을 ConformalClassifier가 내부 calibration에 쓰는 데이터에서 수행 → cal 라벨이 score function에 누수, N 클수록 cal 과적합 → under-cover | **3-way split**(select / fit+cal / test, 서로 disjoint)으로 선택을 calibration과 분리 | `scripts/28` |
 
 ---
 
@@ -73,7 +74,7 @@
 
 이 프로젝트의 가장 강한 결과 일부는 **실패의 정직한 기록**에서 나왔다:
 - A1(천장=아티팩트)·B1/B2(인코딩 함정) → 방법론적 기여(부록 A, "encoding이 결정 변수").
-- A4/B6(최소 패널 부재) → 제안서 전제를 기각하되 *왜 genome-wide가 필요한가*를 정량화(RQ5).
+- A4/B6(최소 패널) → **자기정정의 사례**: 1차 "패널 없음" 단정을 스스로 의심하고 강한 선택기로 재검 → 패널이 살아남(§23). 실패 분석 자체가 잠정적임을 보이는 동시에, "선택기가 결론을 좌우한다"는 방법론 교훈을 남김(RQ5 PENDING).
 - C7/C8(HGDP 추출 난항) → 외부 검증(RQ7)의 honest 한계(Dai n≈4, build 조화)로 Limitations에 반영.
 
 → 상세 인코딩 post-mortem은 [`04` 부록 A](04_experiments_and_results.md), RQ별 상태는 [`05`](05_research_questions.md) 참조.

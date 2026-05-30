@@ -26,7 +26,7 @@ Five-class East-Asian classification, genome-wide **3,042 microhaplotypes**, 504
 - **Open-set reliability is a base-model property** — swapping *only* the estimator moves far-OOD AUROC by **0.165 ≈ 4σ**; the leaderboard model (XGBoost) is the *worst* at abstaining.
 - **The conformal guarantee is base-agnostic** — coverage holds (≥0.90 at α=0.10) for every base model; prediction sets average **~1.8 of 5 labels** at 90% coverage with the linear base.
 - **The "57% ceiling" was an encoding artifact, not an F_ST limit** — nominal diplotypes one-hot-encoded (no scaler) lift a regularized linear model from ~57% to **79.6%** (see [`docs/04` Appendix A](docs/04_experiments_and_results.md)).
-- **No compact "minimum panel"** — accuracy rises monotonically with markers; ≥70% requires the full genome-wide panel. The forensic message is *genome-wide MH + calibrated UQ*, not *minimal panel*.
+- **Minimum panel (under re-investigation)** — univariate (MI) selection finds no compact panel, but **multivariate model-based selection front-loads the signal**: 25 markers reach 52% (8× more marker-efficient than MI) and 1,000 markers reach 76.8% (96% of the full-panel 79.6%). A deployable forensic minimum panel, characterized by accuracy + conformal trust at each size, is being finalized (RQ5).
 - **Degraded-DNA limit** — under simulated allele dropout the conformal guarantee degrades measurably (coverage 0.91 → 0.80 at 50% ADO): exchangeability is violated, a forensic-realism limit competitors do not expose.
 - **External-cohort transfer (preliminary)** — a 1000G-trained model transfers to an independent cohort (HGDP WGS, hg38) at **82.4%** on 3 overlapping populations with only 510/3042 markers and 43% build-mismatched diplotypes; full-panel result pending genome-wide extraction.
 
@@ -40,7 +40,7 @@ The project is organized around the research questions in **[`docs/05_research_q
 | RQ2 | Conformal delivers target coverage despite modest accuracy | ✅ |
 | RQ3 (enabling) | The "ceiling" is an encoding artifact; one-hot + linear wins | ✅ |
 | RQ4 | Calibration (ECE) ≠ open-set separability (AUROC) | ✅ |
-| RQ5 (scope) | No compact minimum panel; signal is genome-wide | ✅ |
+| RQ5 (scope) | Minimum deployable panel via multivariate selection (re-investigation) | ⏳ pending |
 | RQ6 | Conformal coverage degrades under degraded-DNA (ADO) | ✅ |
 | RQ7 | The model + trust layer transfers to an external cohort (HGDP) | 🔶 preliminary (82.4%) |
 
