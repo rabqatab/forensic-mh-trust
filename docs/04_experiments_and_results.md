@@ -12,9 +12,9 @@
 
 | RQ | 핵심 주장 | canonical 섹션 | 보조/이력 |
 |---|---|---|---|
-| **RQ1** ★ | open-set 신뢰도는 base-model이 좌우(정확도 아님) | **§20**(10-seed, 4σ), §11 | §4·§5·§9 *(superseded)* |
+| **RQ1** ★ | open-set 신뢰도는 base-model이 좌우(정확도 아님) | **§20**(10-seed, 4σ), §11, §24(DL도 OSR 약) | §4·§5·§9 *(superseded)* |
 | RQ2 | conformal이 저정확도에서도 목표 커버리지 | **§3**, §21 | — |
-| RQ3 | 57% 천장은 인코딩 artifact; one-hot+linear 우위 | **§13**, 부록 A | §7·§8·§9 *(superseded/보조)* |
+| RQ3 | 57% 천장은 인코딩 artifact; one-hot+linear 우위 | **§13**, 부록 A, §24(DL 5계열도 짐) | §7·§8·§9 *(superseded/보조)* |
 | RQ4 | ECE ≠ open-set 분리 | **§14** | — |
 | RQ5 | 배치 가능한 최소 forensic 패널 존재 (정확도–trust frontier) | **§23**(다변량 선택) | §21 *(univariate sub-result)*, §7 |
 | RQ6 | conformal 보장이 ADO에서 graceful 저하 | **§15** | — |
@@ -360,6 +360,41 @@ confusion: Japanese 25명 중 **11명을 Han으로 오분류**(JPT↔Han 근연 
 → **RFE ≈ one-shot coef** (N≥50에서 noise 내 일치) → 두 독립 다변량 선택기가 서로 확증, rescue가 선택기 아티팩트 아님. 둘 다 **MI를 모든 N에서 10–20p 압도** → §21 음성은 *univariate 한계*임을 두 번째 독립 증거로 확정. (N=25에선 RFE 46.6 < one-shot 52.2 — greedy backward의 극소 패널 over-prune, 정직한 관찰; 여전히 MI보다 +14p.) **부수 결론**: RFE가 one-shot을 못 이기므로 값싼 one-shot 선택으로 충분.
 
 **RQ5 → ANSWERED (재정의)**: 배치 가능한 **최소 패널이 존재**하며, 정확도(§23.1, **RFE 교차검증 §23.3**)–coverage–set size–OSR(§23.2) frontier로 특성화됨. 원안의 "소수 마커 ≥90% 정확도"는 도달 불가(정직)지만, **trustworthy 최소 패널**(coverage 보장 + 운영점 선택, 10–15× 축소)은 충족. univariate 선택의 음성(§21)은 약한 도구 탓이었음.
+
+---
+
+## 24. 확장 model zoo — DL 아키텍처 + baseline (RQ1·RQ3)  `[→ RQ1·RQ3]`
+
+기존 비교가 불공정했음(고전=5-fold one-hot §13, DL=다른 split/패널 §10·§14). **모든 모델을 동일 프로토콜**(genome-wide 3,042, leakage-free 5-fold, acc + far-OOD MSP AUROC)로 재실행. DL은 popgen-DL 문헌 기반 다양한 계열. `scripts/30`(고전+MLP, CPU) + `scripts/31`(GPU torch, `fm/architectures.py`).
+
+### 24.1 고전 baseline + MLP (one-hot, sklearn) — `model_zoo_dl.json`
+| 모델 | accuracy | far-OOD AUROC |
+|---|---|---|
+| **LogReg(one-hot)** | **79.6 ± 3.9** | **0.863 ± 0.026** |
+| BernoulliNB | 66.9 ± 5.7 | 0.678 |
+| RandomForest | 60.3 ± 4.1 | 0.688 |
+| ExtraTrees | 59.7 ± 4.3 | 0.694 |
+| XGBoost | 56.9 ± 1.5 | 0.567 |
+| kNN | 56.8 ± 2.5 | 0.679 |
+| MLP-1 (256) | 52.0 ± 8.6 | 0.802 |
+| MLP-2 (256,128) | 56.0 ± 8.6 | 0.822 |
+| MLP-deep (512,256,128) | 50.4 ± 10.4 | 0.804 |
+
+### 24.2 다양한 DL 아키텍처 (popgen-DL 문헌 기반, GPU) — `dl_architectures.json`
+| 아키텍처 (계열) | accuracy | far-OOD AUROC |
+|---|---|---|
+| EmbMLP (Diet-Networks) | 29.7 ± 6.0 | 0.543 |
+| CNN1D (popgen-CNN) | 34.5 ± 7.4 | 0.439 |
+| SupAE (Neural-ADMIXTURE / popVAE) | 32.5 ± 5.5 | 0.541 |
+| Transformer (supervised) | 51.0 ± 4.7 | 0.575 |
+| **Transformer (SSL+finetune = our FM)** | **54.6 ± 6.0** | 0.576 |
+
+### 24.3 결론
+1. **단순함이 이긴다 (RQ3) — DL 전반에서 확정**: LogReg(one-hot) 79.6%가 5개 DL 계열(embedding/CNN/autoencoder/transformer)을 전부 **≥25p** 압도. 최고 DL은 Transformer+SSL 54.6%. n=504·p≫n에서 DL은 과적합(분산 ±5–10, embedding/AE는 chance 20% 근처). "복잡 모델·피처 이전에 인코딩+단순 선형"이 fine-scale MH ancestry의 결론.
+2. **SSL pretraining이 (작게) 돕는다**: Transformer supervised 51.0 → **SSL+ft 54.6 (+3.6p)** — n=504에서도 양의 신호(§10의 256-마커 결과와 달리 full-panel·동일 프로토콜에서 처음 확인). **→ 데이터 확장(현재 1000G 2,504·gnomAD HGDP+1KG 4,091 추출 중)으로 lift가 커질 가설을 직접 동기화**(Paper 2).
+3. **DL은 OSR도 약하다 (RQ1)**: 모든 DL far-OOD AUROC 0.44–0.58 ≪ LogReg 0.863; CNN은 0.439(<chance). 흥미롭게 **sklearn MLP(one-hot, AUROC 0.80–0.82) > torch embedding-DL(0.54)** — embedding bottleneck이 unseen-diplotype OOD 단서를 버리는 반면 one-hot+`handle_unknown=ignore`는 보존하기 때문. RQ1의 "OSR은 base/표현이 좌우"를 표현 레벨에서 재확인.
+
+**문헌 [verify — 제출 전 서지 확인]**: Romero et al. 2017 (Diet Networks, ICLR); Flagel et al. 2019 (CNN popgen inference, MBE); Gower et al. (genomatnn); Mantes et al. 2023 (Neural ADMIXTURE, Nat Comput Sci); Battey et al. 2021 (popVAE); Korfmann et al. 2023 (deep learning in population genetics, review).
 
 ---
 
