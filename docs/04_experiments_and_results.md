@@ -1,10 +1,25 @@
 # 04 — Experiments & Results (comprehensive log)
 
 **프로젝트**: Trustworthy Forensic Microhaplotype Model — 1000G East-Asian 5집단 분류 + calibrated UQ/open-set + SSL foundation model.
-**최종 갱신**: 2026-05-29 (Opus 4.8)
+**최종 갱신**: 2026-05-30 (Opus 4.8)
 **재현**: 모든 코드 `main` 브랜치, uv 환경(`microhapdb==0.12`, torch 2.12.0+cu130). 결과 JSON은 `results/`(gitignored), 코드/스크립트 커밋됨. 72 pytest green.
 
-> **한 줄 요약 (2026-05-30 갱신 — 이전 "57% 천장/XGBoost 과확신" 주장 폐기)**: (1) **인코딩·모델 선택이 결정적**: MH는 명목형이라 **one-hot + Logistic Regression = 79.6% (5-fold CV)** 로, ordinal-tree(XGBoost 52%, RF 57%)·SSL FM(26%)을 모두 압도. "57% 천장"은 FST가 아니라 *ordinal 인코딩 artifact*였음(Simplicity-Test 승리). (2) **LogReg(one-hot)이 정확도·OSR 모두 최고**(acc 79.6%, far-OOD MSP AUROC 0.84). (3) Conformal coverage 보장 작동, marker↑로 set 좁아짐; 단 ADO(열화)에서 보장 저하. (4) **Calibration(ECE)은 XGBoost가 최선(0.077)·RF가 최악(0.315)** — OSR AUROC(rank)와 ECE(보정)는 별개; 앙상블 epistemic은 OOD 미분리(≈chance). (5) 정확도 70%+를 MH-only로 달성 → SNP/AISNP 확장 불필요.
+> **성격**: 이 문서는 **chronological 실험 로그**다. RQ 확정본과 RQ↔증거 매핑은 [`05_research_questions.md`](05_research_questions.md)가 canonical 진입점이며, 이 문서의 각 실험은 아래 표로 RQ에 매핑된다. **현재 canonical 수치는 §13(정확도)·§20(trust 엄밀성)·§21(최소 패널)**에 있고, 초기 XGBoost/ordinal 섹션(§3–§5, §7, §9)은 *superseded*로 표시(이력 보존용).
+
+> **한 줄 요약 (2026-05-30 — 이전 "57% 천장/XGBoost 과확신" 주장 폐기)**: (1) **인코딩·모델 선택이 결정적**: MH는 명목형이라 **one-hot + Logistic Regression = 79.6% (5-fold CV)** 로, ordinal-tree(XGBoost 52%, RF 57%)·SSL FM(26%)을 모두 압도. "57% 천장"은 FST가 아니라 *ordinal 인코딩 artifact*였음(Simplicity-Test 승리). (2) **LogReg(one-hot)이 정확도·OSR 모두 최고**(acc 79.6%, far-OOD AUROC 0.840±0.016, 10-seed). (3) Conformal coverage 보장 작동(base-agnostic), marker↑로 set 좁아짐; 단 ADO(열화)에서 보장 저하. (4) **Calibration(ECE)은 XGBoost가 최선(0.077)·RF가 최악(0.315)** — OSR AUROC(rank)와 ECE(보정)는 별개; 앙상블 epistemic은 OOD 미분리(≈chance). (5) 고정확도엔 compact 최소 패널 없음 — genome-wide 필요(§21).
+
+### RQ ↔ 섹션 매핑
+
+| RQ | 핵심 주장 | canonical 섹션 | 보조/이력 |
+|---|---|---|---|
+| **RQ1** ★ | open-set 신뢰도는 base-model이 좌우(정확도 아님) | **§20**(10-seed, 4σ), §11 | §4·§5·§9 *(superseded)* |
+| RQ2 | conformal이 저정확도에서도 목표 커버리지 | **§3**, §21 | — |
+| RQ3 | 57% 천장은 인코딩 artifact; one-hot+linear 우위 | **§13**, 부록 A | §7·§8·§9 *(superseded/보조)* |
+| RQ4 | ECE ≠ open-set 분리 | **§14** | — |
+| RQ5 | compact 최소 패널 없음(genome-wide 필요) | **§21** | §7 *(superseded)* |
+| RQ6 | conformal 보장이 ADO에서 graceful 저하 | **§15** | — |
+| RQ7 | HGDP 외부 코호트 전이 | §4.6 *(pending)* | — |
+| (비-RQ) | SSL FM = Paper 2; Reliable-Ae = deferred | §6·§10(FM), §2(Ae) | — |
 
 ---
 
@@ -28,15 +43,15 @@
 
 ---
 
-## 1. Exp 1 — Leakage-free baseline (Plan 1)
+## 1. Exp 1 — Leakage-free baseline (Plan 1)  `[pipeline 검증]`
 **방법**: diplotype 추출(양 haplotype, P0 #2) → per-marker 인코딩 → **leakage-free nested CV**(outer fold 내부 feature selection, P0 #1). GroupKFold scaffold만(P0 #8; EAS는 사실상 unrelated).
 **결과 (chr22, 53마커, chance 0.20)**: top-5 0.236, top-20 0.298, all 0.298 → near-chance(정보량 부족). **상태 ✅** pipeline 검증. (genome-wide 정확도는 §7.)
 
-## 2. Exp 2 — Reliable-Ae / Wei 2025 phasing (Plan 1)
+## 2. Exp 2 — Reliable-Ae / Wei 2025 phasing (Plan 1)  `[비-RQ: Reliable-Ae deferred]`
 - **Ae(EAS, chr22)**: mean **4.91**, max **17.44**. 고-Ae marker가 Wei 2025의 phasing-위험 marker.
 - **P_phase_error/Reliable-Ae**: **deferred**(complete trio 6개, NYGC 필요). 스크립트 hg38-ready. **상태 △**.
 
-## 3. Exp 3 — Conformal coverage (Plan 2, XGBoost base)
+## 3. Exp 3 — Conformal coverage (Plan 2, XGBoost base)  `[→ RQ2]`
 LAC nonconformity + **Mondrian** per-class quantile(order-statistic). `results/conformal/coverage_curve.json`.
 
 genome-wide (3,042마커):
@@ -49,21 +64,21 @@ genome-wide (3,042마커):
 
 → ✅ coverage가 1−α 추종, **marker↑ → set tighter**(chr22 53마커 α=0.1 set 3.79 → 3,042마커 2.61).
 
-## 4. Exp 4 — Open-set far-OOD (Plan 2, XGBoost base)
+## 4. Exp 4 — Open-set far-OOD (Plan 2, XGBoost base)  `[→ RQ1 · superseded by §20]`
 - OOD unseen-diplotype fraction **0.132**; **MSP AUROC 0.695**, FPR@95TPR 0.75; empty-set reject **0**(모든 α).
 - marker별 AUROC 추이: 53마커 0.50 → 1,058 0.67 → 3,042 **0.695**(포화).
 → ⚠️ XGBoost가 비-EAS도 과확신 분류 → empty-set 미발화. **base-calibration 한계**(§9·§11에서 RF로 개선).
 
-## 5. Exp 5 — Open-set near-OOD / LOPO (Plan 2, XGBoost base)
+## 5. Exp 5 — Open-set near-OOD / LOPO (Plan 2, XGBoost base)  `[→ RQ1 · superseded by §11/§20]`
 5개 hold-out 집단 모두 reject gap **0**(α=0.10) → ❌ 근연 집단 미검출. base model 과확신.
 
-## 6. Exp 6 — SSL FM core (Plan 3a, synthetic)
+## 6. Exp 6 — SSL FM core (Plan 3a, synthetic)  `[비-RQ: Paper 2]`
 구성: FMVocab, MHMatrixDataset(masked + ADO/dropout contrastive views), objectives(masked CE + NT-Xent), MHTransformer(weight-tied head), heads, pretrain/finetune, `ForensicFMClassifier`.
 synthetic: SSL loss 11.47→6.52; finetune acc 0.36→0.92; **ConformalClassifier가 FM을 변경 없이 wrapping**(통합 테스트 통과). **상태 ✅ 코어(72 tests)**. 실데이터 성능은 §10.
 
 ---
 
-## 7. Exp 7 — Genome-wide 분류 정확도 / 최소 패널 (leakage-free nested 5-fold)
+## 7. Exp 7 — Genome-wide 분류 정확도 / 최소 패널 (leakage-free nested 5-fold)  `[→ RQ3·RQ5 · superseded by §13/§21]`
 `results/baseline/genome_wide_accuracy.json` (chance 0.20):
 | 패널(top-N) | 정확도 | std |
 |---|---|---|
@@ -75,7 +90,7 @@ synthetic: SSL loss 11.47→6.52; finetune acc 0.36→0.92; **ConformalClassifie
 | 3,042 | 54.4% | 3.4 |
 → ordinal-tree 기준 최소 패널 ≈ 200마커(56.9%). **단, 이 ~57%는 FST 천장이 아니라 ordinal 인코딩 한계였음** — one-hot+LogReg는 동일 데이터로 **79.6%**(§13). "어렵다"는 *모델/인코딩* 문제였지 본질적 난이도가 아니었다.
 
-## 8. Exp 8 — PCA-feature ablation (Chen 2025 동기)
+## 8. Exp 8 — PCA-feature ablation (Chen 2025 동기)  `[→ RQ3]`
 `results/baseline/pca_ablation.json`, 동일 5-fold:
 | 표현 | 분류기 | 정확도 |
 |---|---|---|
@@ -84,7 +99,7 @@ synthetic: SSL loss 11.47→6.52; finetune acc 0.36→0.92; **ConformalClassifie
 | one-hot→SVD(10/20/50/100) | LogReg | 37.3 / 28.6 / 25.4 / **45.8** |
 → **PCA류는 도움 안 됨**(최선 45.8% < raw 56.1%, −10.3p). 경쟁작 이득은 PCA가 아니라 ancestry-최적 AISNP 선별 + ADMIXTURE에서 옴. one-hot MH에 SVD를 씌우면 XGBoost가 raw에서 쓰던 marker별 판별 신호가 소실.
 
-## 9. Exp 9 — Model zoo (full 3,042, 동일 5-fold + conformal/OSR)
+## 9. Exp 9 — Model zoo (full 3,042, 동일 5-fold + conformal/OSR)  `[→ RQ1·RQ3 · superseded by §13]`
 > ⚠ **인코딩 confounded**(트리=ordinal, linear/distance=one-hot+StandardScaler). 정식 비교는 §13의 전-모델 one-hot(no scaler) 재실행. 아래는 이력 보존용.
 `results/baseline/model_zoo.json`. tree=ordinal 인코딩, linear/distance=one-hot Pipeline.
 | 모델 | 정확도 | coverage | set size | **MSP AUROC** |
@@ -96,7 +111,7 @@ synthetic: SSL loss 11.47→6.52; finetune acc 0.36→0.92; **ConformalClassifie
 | SVM-RBF | 0.254 | 0.921 | 4.11 | 0.656 |
 → **RandomForest가 정확도·OSR 모두 최고** (XGBoost 추월). **OSR(AUROC)이 base 모델에 크게 의존**(0.55~0.74) — open-set 약점이 부분적으로 모델 선택 문제. kNN·SVM은 one-hot 고차원에서 붕괴(curse of dimensionality, 정직한 결과). LogReg는 가장 좁은 set(1.91)=가장 결정적.
 
-## 10. Exp 10 — FM vs XGBoost head-to-head (Plan 3b-core)
+## 10. Exp 10 — FM vs XGBoost head-to-head (Plan 3b-core)  `[비-RQ: Paper 2]`
 `results/baseline/fm_vs_xgboost.json`, top-256 high-Ae 패널, 70/30 split:
 | 모델 | 정확도 | coverage | set size | MSP AUROC |
 |---|---|---|---|---|
@@ -104,7 +119,7 @@ synthetic: SSL loss 11.47→6.52; finetune acc 0.36→0.92; **ConformalClassifie
 | FM | 0.263 | 0.947 | 4.45 | 0.532 |
 → **FM이 XGBoost에 짐**(소데이터 504로 transformer 과적합; 어댑터는 masked-only SSL). 두 모델 절대치가 낮은 건 **high-Ae 패널이 약하기 때문**(Ae=집단 내 다양성 ≠ 집단 간 FST). FM의 활로 = unlabeled 데이터 확장(all-2504/NYGC) + contrastive 활성화(Plan 3b-extended).
 
-## 11. Exp 11 — Plan 2 재산출: base 모델 교체 (XGBoost → RF → LogReg one-hot)
+## 11. Exp 11 — Plan 2 재산출: base 모델 교체 (XGBoost → RF → LogReg one-hot)  `[→ RQ1]`
 `results/baseline/plan2_rf_vs_xgb.json`, `plan2_logreg.json` — 동일 데이터·split, **base_estimator만 교체** (model-agnostic trust layer):
 
 | 지표 (α=0.1 기준) | XGBoost | RandomForest | **LogReg(one-hot)** |
@@ -125,7 +140,7 @@ synthetic: SSL loss 11.47→6.52; finetune acc 0.36→0.92; **ConformalClassifie
 
 ---
 
-## 13. Exp 13 — 인코딩이 천장을 깬다: one-hot LogReg (leakage-free 5-fold CV)
+## 13. Exp 13 — 인코딩이 천장을 깬다: one-hot LogReg (leakage-free 5-fold CV)  `[→ RQ3 · canonical 정확도]`
 `results/baseline/onehot_cv.json` (OneHotEncoder를 fold 내부에서 fit):
 | 설정 | 5-fold CV 정확도 |
 |---|---|
@@ -143,7 +158,7 @@ synthetic: SSL loss 11.47→6.52; finetune acc 0.36→0.92; **ConformalClassifie
 
 → **정밀 결론: "one-hot이 다 고친다"가 아니라 "정규화 *선형*+one-hot이 이긴다"**. 트리는 one-hot으로도 57→60%에 그침(48k 희소 binary × 504 샘플 p≫n에서 axis-aligned split 희석). kNN은 scaler 제거로 21→65% 급등(StandardScaler가 거리모델을 죽였던 게 확정). **권장 base = LogReg(one-hot)** — 정확도(79.6%)·OSR(AUROC 0.85, §11) 모두 최고. ("57% 천장"은 ordinal-tree artifact였고, 정확히는 *고차원 one-hot MH에서 정규화 선형모델 우위*가 결론.)
 
-## 14. Exp 14 — Calibration(ECE) + Deep Ensembles / MC-Dropout UQ
+## 14. Exp 14 — Calibration(ECE) + Deep Ensembles / MC-Dropout UQ  `[→ RQ4]`
 `results/baseline/calibration_uq.json` (70/30 split):
 | 모델 | acc | ECE | MSP AUROC | epistemic AUROC |
 |---|---|---|---|---|
@@ -154,7 +169,7 @@ synthetic: SSL loss 11.47→6.52; finetune acc 0.36→0.92; **ConformalClassifie
 | MC-Dropout (MLP) | 0.717 | 0.177 | 0.809 | 0.521 |
 → **ECE 정정**: XGBoost가 가장 잘 보정(0.077), **RF가 최악(0.315)** — 이전 "XGBoost 과확신" 주장 폐기. RF의 OSR 우위는 보정이 아니라 확률 *순위* 분리(AUROC) 덕(ECE와 AUROC는 별개). **앙상블 epistemic은 OOD 미검출**(0.36/0.52≈chance) → MSP가 더 나음(정직한 negative). 정확도 정식값은 §13의 CV(79.6%).
 
-## 15. Exp 15 — 열화 DNA(ADO) robustness (RF base, clean 학습→ADO test)
+## 15. Exp 15 — 열화 DNA(ADO) robustness (RF base, clean 학습→ADO test)  `[→ RQ6]`
 `results/baseline/ado_robustness.json`:
 | ADO rate | acc | coverage | set | OSR AUROC |
 |---|---|---|---|---|
@@ -201,6 +216,53 @@ uv run python scripts/19_onehot_cv.py           # one-hot LogReg 5-fold CV (Exp 
 3. **ADO 재실험을 LogReg(one-hot) base로** + clean+ADO 혼합 calibration으로 coverage 회복 시도.
 4. **Paper 1 메시지 재정립**: "competitive accuracy(80%, one-hot) + calibrated UQ/OSR + ADO robustness; 단순 인코딩이 복잡 모델을 이긴다."
 5. (deferred) FM/contrastive + 데이터 확장(Paper 2), NYGC trio(Reliable-Ae), msp_threshold 운영곡선, 도표화(`academic-plotting`).
+
+---
+
+## 20. base-model이 OSR을 좌우 — 10-seed 통계적 엄밀성 (A)  `[→ RQ1 · canonical ★]`
+
+`scripts/24_trust_rigor.py` → `results/baseline/trust_rigor.json`. 동일 OOD 셋, 10개 train/test split(30% test, stratified, seed 0–9) 반복, α=0.10. mean±std.
+
+| base | far-OOD AUROC | coverage | set size | FPR@95 | empty-set reject_OOD |
+|---|---|---|---|---|---|
+| **LogReg(one-hot)** | **0.840 ± 0.016** | 0.916 ± 0.025 | 1.72 | 0.461 | 0.123 ± 0.101 |
+| RandomForest | 0.757 ± 0.048 | 0.920 ± 0.022 | 2.53 | 0.641 | 0.004 ± 0.006 |
+| XGBoost | 0.675 ± 0.038 | 0.924 ± 0.029 | 2.93 | 0.747 | 0.000 ± 0.000 |
+
+**해석:**
+- **LogReg vs XGBoost AUROC 격차 = 0.165 ≈ 결합 std(0.016+0.038)의 ~4배** → "base-model이 open-set 분리를 좌우한다"(§11)는 핵심 주장이 통계적으로 확고. 단일 split(0.849)이 cherry-pick이 아님(10-seed mean 0.840±0.016로 일관).
+- **coverage는 세 모델 모두 ≥0.90** — conformal 보장은 base-model에 무관하게 유지된다(보장은 base-agnostic, 분리는 base가 좌우 — 2단 메시지).
+- LogReg가 set size(1.72, 최소)·AUROC·FPR95 모두 최고. XGBoost의 empty-set reject는 **정확히 0.000±0.000**(절대 발화 안 함) → tree류는 OOD에 과확신.
+- → Paper 1 §4.3 핵심 표에 error bar 확보.
+
+## 21. 최소 패널 — one-hot LogReg, leakage-free (B)  `[→ RQ5 · canonical]`
+
+`scripts/25_min_panel_logreg.py` → `results/baseline/min_panel_logreg.json`. fold 내부에서 mutual_info_classif(ordinal 행렬)로 marker top-N 선별(leakage-free) → 해당 컬럼만 one-hot LogReg, 5-fold.
+
+| markers | accuracy |
+|---|---|
+| 10 | 28.2% ± 1.4 |
+| 50 | 39.1% ± 4.2 |
+| 100 | 49.4% ± 2.0 |
+| 200 | 54.8% ± 3.8 |
+| 500 | 60.3% ± 4.2 |
+| 1000 | 68.0% ± 2.8 |
+| **3042 (전체)** | **79.6% ± 3.9** |
+
+**해석 — "최소 패널" 전제의 재해석:**
+- **plateau 없음** — 정확도가 marker 수에 거의 단조 증가. ordinal-tree가 200마커/57%에서 평탄해진 것과 정반대(그건 인코딩 아티팩트였음 — 부록 A).
+- **70%+ 정확도는 전 패널(3042) 필요** — 70/75/78% threshold를 만족하는 최소 N은 전부 3042. 작은 "최소 패널"로는 고정확도 불가.
+- → 제안서 원안의 "최소 MH 패널" 메시지가 인코딩 교정 후엔 **"fine-scale EAS는 genome-wide MH가 필요"**로 바뀜. Paper 1의 forensic 함의는 "minimal panel"이 아니라 "genome-wide MH + calibrated UQ".
+- **L1-LogReg 축소 패널도 회복 실패** (`scripts/26_l1_panel_cv.py` → `results/baseline/l1_panel_cv.json`, leakage-free 5-fold one-hot L1):
+
+  | L1 C | markers (mean) | accuracy |
+  |---|---|---|
+  | 0.1 | 71 | 50.8% ± 1.8 |
+  | 0.2 | 268 | 55.0% ± 2.6 |
+  | 0.5 | 474 | 56.9% ± 3.8 |
+
+  → **공동 선별(L1)이 개별 선별(MI)을 이기지 못함** (L1@268≈55.0% ≈ MI@200=54.8%; L1@474≈56.9% < MI@500=60.3%). ~70–470 marker 어느 지점에서도 ~57% 이하 → **고정확도(79.6%)는 전 패널 3042가 필수**. "최소 패널 → 79%" 가설 기각.
+  - **결론(확정)**: fine-scale EAS 판별 신호는 genome 전반에 분산되어 있어 compact subset이 담지 못함. Paper 1 forensic 함의 = **"genome-wide MH + calibrated UQ"** (minimal-panel 아님).
 
 ---
 

@@ -18,6 +18,13 @@ build/
 .vscode/
 .idea/
 
+# Stray tabix indexes from remote HGDP extraction (land in cwd)
+*.tbi
+hgdp_wgs.*.vcf.gz*
+
+# Course assignment / paperwork artifacts (not for the public repo)
+*.docx
+
 # System
 .DS_Store
 
