@@ -25,6 +25,11 @@ hgdp_wgs.*.vcf.gz*
 # Course assignment / paperwork artifacts (not for the public repo)
 *.docx
 
+# Secrets — never commit (public repo)
+.env
+*.env
+.env.*
+
 # System
 .DS_Store
 
