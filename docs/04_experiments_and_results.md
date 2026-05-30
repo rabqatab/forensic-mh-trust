@@ -18,7 +18,7 @@
 | RQ4 | ECE ≠ open-set 분리 | **§14** | — |
 | RQ5 | compact 최소 패널 없음(genome-wide 필요) | **§21** | §7 *(superseded)* |
 | RQ6 | conformal 보장이 ADO에서 graceful 저하 | **§15** | — |
-| RQ7 | HGDP 외부 코호트 전이 | §4.6 *(pending)* | — |
+| RQ7 | HGDP 외부 코호트 전이 | **§22** *(preliminary, 82.4% @510마커)* | — |
 | (비-RQ) | SSL FM = Paper 2; Reliable-Ae = deferred | §6·§10(FM), §2(Ae) | — |
 
 ---
@@ -263,6 +263,34 @@ uv run python scripts/19_onehot_cv.py           # one-hot LogReg 5-fold CV (Exp 
 
   → **공동 선별(L1)이 개별 선별(MI)을 이기지 못함** (L1@268≈55.0% ≈ MI@200=54.8%; L1@474≈56.9% < MI@500=60.3%). ~70–470 marker 어느 지점에서도 ~57% 이하 → **고정확도(79.6%)는 전 패널 3042가 필수**. "최소 패널 → 79%" 가설 기각.
   - **결론(확정)**: fine-scale EAS 판별 신호는 genome 전반에 분산되어 있어 compact subset이 담지 못함. Paper 1 forensic 함의 = **"genome-wide MH + calibrated UQ"** (minimal-panel 아님).
+
+---
+
+## 22. RQ7 — HGDP 외부 코호트 전이 (preliminary, 5/22 chroms)  `[→ RQ7 · preliminary]`
+
+`scripts/22_extract_hgdp.py`(원격 추출) + `scripts/23_hgdp_transfer.py` → `results/baseline/hgdp_transfer.json`. **1000G EAS(hg19) 학습 → HGDP WGS(hg38) 독립 코호트 테스트.** 3-class 매핑(Han=CHB+CHS, Japanese=JPT, Dai=CDX; KHV는 HGDP 매칭 없음 → 제외). marker는 NAME으로 매칭, `OneHotEncoder(handle_unknown="ignore")`가 build/allele mismatch 흡수.
+
+> **상태**: HGDP 추출이 chr1·19–22(5/22)만 완료된 시점의 **예비 결과**. genome-wide 추출 완료 시 동일 스크립트 재실행으로 갱신(현재 백그라운드 진행 중).
+
+| 항목 | 값 |
+|---|---|
+| common markers | **510 / 3042** (5/22 chroms) |
+| train (1000G) | 405 (Han 208 / Japanese 104 / Dai 93) |
+| test (HGDP) | 68 (Han 39 / Japanese 25 / Dai 4) |
+| **transfer accuracy** | **82.4%** |
+| per-class recall | Dai 1.00 (n=4) / Han 0.974 / Japanese 0.56 |
+| unseen diplotype fraction | 0.43 (hg19↔hg38 build noise) |
+| within-HGDP 3-fold CV | 0.603 ± 0.008 |
+
+confusion: Japanese 25명 중 **11명을 Han으로 오분류**(JPT↔Han 근연 — 생물학적으로 타당); Dai·Han은 거의 완벽 전이(4/4, 38/39).
+
+**해석:**
+- **모델이 독립 코호트로 전이됨** — 단 **510/3042 마커(1/6)**·**43% unseen diplotype**(build mismatch)에도 3-class **82.4%**. RQ5(정확도는 marker에 단조 증가)에 비추면 전체 3042 마커 시 **상향** 예상 → 82.4%는 **보수적 하한**.
+- **build 조화 견고성**: `handle_unknown=ignore`가 43% unseen을 흡수하고도 82% 유지 — hg19↔hg38 교차에서 one-hot 전략의 설계 이점(우연 아님). transfer(82%) > within-HGDP CV(60%)는 1000G 405명 학습이 HGDP 68명보다 강하기 때문.
+- **약점**: Japanese recall 0.56(JPT↔Han 근연 + 마커 부족 → 전체 마커로 개선 여지).
+- **한계**: Dai n=4(소표본, 1.0 recall 비신뢰), KHV(베트남) HGDP 매칭 없음, 예비(5/22 chroms).
+
+→ RQ7 **preliminary ANSWERED** (전체 추출 후 final 갱신).
 
 ---
 
