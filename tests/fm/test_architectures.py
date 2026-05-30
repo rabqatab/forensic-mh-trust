@@ -5,7 +5,7 @@ import pytest
 from forensic_mh.fm.architectures import TorchArchClassifier
 
 
-@pytest.mark.parametrize("arch", ["embmlp", "cnn1d", "supae", "fttransformer"])
+@pytest.mark.parametrize("arch", ["embmlp", "cnn1d", "supae", "fttransformer", "resnettab", "rescnn"])
 def test_fit_predict_proba_shape_and_normalization(arch):
     rng = np.random.RandomState(0)
     M, n, k, n_classes = 30, 50, 8, 4

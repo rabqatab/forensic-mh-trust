@@ -91,7 +91,51 @@ class FTTransformer(nn.Module):
         return self.head(self.enc(seq)[:, 0])
 
 
-_ARCH = {"embmlp": EmbMLP, "cnn1d": CNN1D, "supae": SupAE, "fttransformer": FTTransformer}
+class ResNetTab(nn.Module):
+    """ResNet for tabular data (Gorishniy et al. 2021) — the co-SOTA with FT-Transformer.
+    Bag-of-marker embedding -> residual channel-MLP blocks -> head."""
+    def __init__(self, M, k, d, n_classes, n_blocks=3, hidden=256, p=0.2):
+        super().__init__()
+        self.value_emb = nn.Embedding(M * k, d)
+        self.pos = nn.Embedding(M, d)
+        self.register_buffer("off", torch.arange(M) * k)
+        self.register_buffer("idx", torch.arange(M))
+        self.inp = nn.Linear(d, hidden)
+        self.blocks = nn.ModuleList([
+            nn.Sequential(nn.LayerNorm(hidden), nn.Linear(hidden, hidden), nn.ReLU(),
+                          nn.Dropout(p), nn.Linear(hidden, hidden)) for _ in range(n_blocks)])
+        self.head = nn.Sequential(nn.LayerNorm(hidden), nn.ReLU(), nn.Linear(hidden, n_classes))
+
+    def forward(self, x):
+        e = (self.value_emb(x + self.off) + self.pos(self.idx)).mean(1)   # (B, d)
+        h = self.inp(e)
+        for blk in self.blocks:
+            h = h + blk(h)
+        return self.head(h)
+
+
+class ResCNN(nn.Module):
+    """Deeper residual 1D-CNN over genome-ordered markers (genomatnn/Flagel-faithful)."""
+    def __init__(self, M, k, d, n_classes, ch=64, n_blocks=3, p=0.2):
+        super().__init__()
+        self.value_emb = nn.Embedding(M * k, d)
+        self.register_buffer("off", torch.arange(M) * k)
+        self.stem = nn.Conv1d(d, ch, 7, padding=3)
+        self.blocks = nn.ModuleList([
+            nn.Sequential(nn.Conv1d(ch, ch, 5, padding=2), nn.BatchNorm1d(ch), nn.ReLU(),
+                          nn.Conv1d(ch, ch, 5, padding=2), nn.BatchNorm1d(ch)) for _ in range(n_blocks)])
+        self.pool = nn.MaxPool1d(2)
+        self.head = nn.Sequential(nn.Dropout(p), nn.Linear(ch, n_classes))
+
+    def forward(self, x):
+        h = torch.relu(self.stem(self.value_emb(x + self.off).transpose(1, 2)))   # (B, ch, M)
+        for blk in self.blocks:
+            h = self.pool(torch.relu(h + blk(h)))
+        return self.head(h.mean(-1))
+
+
+_ARCH = {"embmlp": EmbMLP, "cnn1d": CNN1D, "supae": SupAE, "fttransformer": FTTransformer,
+         "resnettab": ResNetTab, "rescnn": ResCNN}
 
 
 class TorchArchClassifier(BaseEstimator):
