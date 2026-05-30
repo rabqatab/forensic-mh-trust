@@ -71,7 +71,27 @@ class SupAE(nn.Module):
         return self.clf(z), self.dec(z), e
 
 
-_ARCH = {"embmlp": EmbMLP, "cnn1d": CNN1D, "supae": SupAE}
+class FTTransformer(nn.Module):
+    """Feature-Tokenizer Transformer (Gorishniy et al. 2021) for categorical features:
+    per-feature value embedding as tokens + [CLS] + pre-norm transformer -> CLS head.
+    """
+    def __init__(self, M, k, d, n_classes, n_layers=3, n_heads=4, p=0.1):
+        super().__init__()
+        self.value_emb = nn.Embedding(M * k, d)
+        self.register_buffer("off", torch.arange(M) * k)
+        self.cls = nn.Parameter(torch.zeros(1, 1, d))
+        layer = nn.TransformerEncoderLayer(d, n_heads, dim_feedforward=4 * d,
+                                           dropout=p, batch_first=True, norm_first=True)
+        self.enc = nn.TransformerEncoder(layer, n_layers)
+        self.head = nn.Sequential(nn.LayerNorm(d), nn.Linear(d, n_classes))
+
+    def forward(self, x):
+        tok = self.value_emb(x + self.off)                       # (B, M, d)
+        seq = torch.cat([self.cls.expand(x.shape[0], -1, -1), tok], dim=1)
+        return self.head(self.enc(seq)[:, 0])
+
+
+_ARCH = {"embmlp": EmbMLP, "cnn1d": CNN1D, "supae": SupAE, "fttransformer": FTTransformer}
 
 
 class TorchArchClassifier(BaseEstimator):
