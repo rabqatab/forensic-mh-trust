@@ -8,6 +8,7 @@ All documents are anchored by the **research questions**. Read in this order.
 |---|---|---|
 | **05** | [`05_research_questions.md`](05_research_questions.md) | **Start here.** The confirmed RQs (RQ1–RQ7), proposal→paper evolution, RQ↔evidence map, explicit non-RQs (scope). |
 | **04** | [`04_experiments_and_results.md`](04_experiments_and_results.md) | The evidence log — every experiment, tagged to its RQ. §13/§20/§21 hold the canonical numbers; Appendix A is the encoding post-mortem (RQ3). |
+| **06** | [`06_failures_and_revisions.md`](06_failures_and_revisions.md) | **Failure post-mortem** — retracted claims, abandoned/deferred approaches, engineering bugs (what failed, why, how fixed), each anchored to an RQ. |
 
 > **Canonical numbers live in `04` §13 (accuracy), §20 (trust rigor, 10-seed), §21 (minimum panel).** Earlier sections (§3–§5, §7, §9) are XGBoost/ordinal-era and are explicitly marked *superseded* — kept as chronological history, not as current results.
 
