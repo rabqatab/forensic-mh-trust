@@ -447,6 +447,18 @@ confusion: Japanese 25명 중 **11명을 Han으로 오분류**(JPT↔Han 근연 
 
 ---
 
+## 25. SSL foundation model — 데이터 확장 (Paper 2)  `[비-RQ · 진행 중]`
+
+SSL FM 병목은 데이터 규모(n=504, §24.2). 공개 풀 추출(`scripts/32·33`): **1000G all-2504**(hg19, 16/22 chr 성공 = 2,578마커) + **gnomAD HGDP+1KG 4,091**(hg38 harmonized, 완료).
+
+**1차 SSL@2504** (`scripts/34`, masked+contrastive, 2,578마커): **44.6% ± 5.1**, far-OOD AUROC **0.527 ± 0.254**(불안정) → n=504 SSL(54.6%)·LogReg(79.6%) **둘 다 못 이김**.
+
+> **⚠ confounded — 단정 불가**: 1차 결과는 (a) 마커셋(2,578 vs §24의 3,042), (b) **contrastive 추가**(§24 SSL+ft는 masked-only), (c) 프로토콜이 동시에 달라 "데이터 확장이 해쳤다"고 결론낼 수 없음. AUROC ±0.25 불안정성은 SSL 표현이 OOD에 비신뢰함을 시사.
+
+**통제 ablation** (`scripts/40`, sparkq `9f6a`, **진행 중**): 동일 마커·동일 finetune·동일 contrastive에서 **pretrain 풀만 {none(supervised) / 504-EAS / 2504-all}** 변경 → 데이터-스케일 효과를 깨끗이 분리. **[결과 대기]** → 이후 gnomAD 4,091(전체 마커)로 최종 검정.
+
+---
+
 ## 부록 A — 인코딩 변천사·근거·결함 (post-mortem)
 
 > 왜 ~57% "천장"에 오래 갇혀 있었는가의 근본 원인. 핵심: **명목형(diplotype)을 ordinal 정수로 인코딩**한 것 + **one-hot에 StandardScaler를 씌운 실수**가 진짜 성능을 가렸다. one-hot(no scaler)+LogReg로 79.6%가 드러나며 발견됨(Exp 13).

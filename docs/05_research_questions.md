@@ -84,7 +84,7 @@
 
 ## 3. 명시적 비-RQ (scope 경계 — 이번 논문이 다루지 *않는* 것)
 
-- **SSL Foundation Model이 정확도/OSR에서 base를 능가하는가** → **[DEFERRED, Paper 2]**. full-panel·동일 프로토콜에서 SSL+finetune 54.6%(supervised transformer 51.0 대비 **+3.6p 양의 신호**, §24)지만 LogReg 79.6%엔 한참 못 미침. **SSL이 작게라도 돕는다**는 첫 실데이터 증거 → 데이터 확장(1000G 2,504·gnomAD HGDP+1KG 4,091 추출 중) + contrastive로 lift 확대 검정.
+- **SSL Foundation Model이 정확도/OSR에서 base를 능가하는가** → **[DEFERRED, Paper 2]**. full-panel·동일 프로토콜에서 SSL+finetune 54.6%(supervised transformer 51.0 대비 **+3.6p 양의 신호**, §24)지만 LogReg 79.6%엔 한참 못 미침. **SSL이 작게라도 돕는다**는 첫 실데이터 증거 → 데이터 확장 검정. **1차 SSL@2504 = 44.6%**(confounded — 마커셋·contrastive·프로토콜 차이; §25). 통제 ablation(none/504/2504, scripts/40) 진행 중 → 데이터-스케일 효과 분리 후 gnomAD 4,091로 최종.
 - **한국인(KOR) 미지 집단을 실제로 거부하는가** → 데이터 부재. non-EAS super-pop + LOPO를 honest proxy로만 사용(한계 명시).
 - **Reliable-Ae(phasing-error penalty) 정량화** → 표준 1000G에 완전 EAS trio 0개 → NYGC 30× release 필요, **[DEFERRED]**. Ae 분석 자체는 보고(§4.5 docs/04).
 - **웹 도구** → 미구현(모델·평가 우선).
