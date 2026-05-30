@@ -389,12 +389,34 @@ confusion: Japanese 25명 중 **11명을 Han으로 오분류**(JPT↔Han 근연 
 | Transformer (supervised) | 51.0 ± 4.7 | 0.575 |
 | **Transformer (SSL+finetune = our FM)** | **54.6 ± 6.0** | 0.576 |
 
+### 24.4 Linear family + 정규화 sweep (RQ3 — 선형 *클래스* 우위) — `extended_zoo.json`
+"LogReg 운빨인가, 선형 클래스인가?" `scripts/35`, one-hot 5-fold.
+
+| 모델 | accuracy | far-OOD AUROC |
+|---|---|---|
+| LogReg L2 (C=1, ref) | 79.6 ± 3.9 | 0.863 |
+| LogReg L2 (C=0.1) | 78.6 ± 4.0 | 0.862 |
+| LogReg L2 (C=10) | 76.6 ± 4.4 | **0.898** |
+| **LinearSVC (calibrated)** | **79.8 ± 3.7** | **0.957** |
+| SGD-log | 69.3 ± 5.4 | 0.694 |
+| ComplementNB | 75.2 ± 5.0 | 0.647 |
+| LogReg L1 (sparse) | 56.9 ± 3.8 | 0.657 |
+| LogReg elastic-net | 62.5 ± 5.4 | 0.687 |
+
+→ **선형 클래스 우위 확정(LogReg 운빨 아님)**: hinge-loss **LinearSVC 79.8% ≈ logistic LogReg 79.6%** — 손실함수가 달라도 dense 선형+one-hot이 ~80%. **LinearSVC가 OSR AUROC 0.957로 전 모델 최고**(margin 기반 분리). **L1/elastic-net(sparse)은 급락**(56.9/62.5) — RQ5(sparse 선택 실패)와 일관, dense L2가 핵심. 정규화: C=1이 정확도 sweet spot, C↑는 OSR 소폭↑.
+
+### 24.5 Native-categorical 트리 + tabular-DL SOTA (RQ3 보강) — `[진행 중]`
+- **Native-cat 트리**(`scripts/36`, `native_cat_trees.json`): HistGBDT(capped categorical)·CatBoost(raw string categorical). "트리가 진 게 *ordinal 인코딩* 탓인가 *모델 클래스* 탓인가" 결정. **[결과 대기 — CatBoost 3042 cat feature로 느림]**
+- **Tabular-DL SOTA**(`scripts/37`, `sota_dl.json`, GPU): FT-Transformer(Gorishniy 2021)·TabNet(Arik 2021) — generic DL이 SOTA를 과소평가했는지 차단. **[진행 중 — fold1 예비: FT-Transformer 36.6%, TabNet 24.8%(chance 20% 근처)]** → 예상대로 LogReg에 크게 뒤짐(완료 후 확정).
+
 ### 24.3 결론
 1. **단순함이 이긴다 (RQ3) — DL 전반에서 확정**: LogReg(one-hot) 79.6%가 5개 DL 계열(embedding/CNN/autoencoder/transformer)을 전부 **≥25p** 압도. 최고 DL은 Transformer+SSL 54.6%. n=504·p≫n에서 DL은 과적합(분산 ±5–10, embedding/AE는 chance 20% 근처). "복잡 모델·피처 이전에 인코딩+단순 선형"이 fine-scale MH ancestry의 결론.
 2. **SSL pretraining이 (작게) 돕는다**: Transformer supervised 51.0 → **SSL+ft 54.6 (+3.6p)** — n=504에서도 양의 신호(§10의 256-마커 결과와 달리 full-panel·동일 프로토콜에서 처음 확인). **→ 데이터 확장(현재 1000G 2,504·gnomAD HGDP+1KG 4,091 추출 중)으로 lift가 커질 가설을 직접 동기화**(Paper 2).
 3. **DL은 OSR도 약하다 (RQ1)**: 모든 DL far-OOD AUROC 0.44–0.58 ≪ LogReg 0.863; CNN은 0.439(<chance). 흥미롭게 **sklearn MLP(one-hot, AUROC 0.80–0.82) > torch embedding-DL(0.54)** — embedding bottleneck이 unseen-diplotype OOD 단서를 버리는 반면 one-hot+`handle_unknown=ignore`는 보존하기 때문. RQ1의 "OSR은 base/표현이 좌우"를 표현 레벨에서 재확인.
 
-**문헌 [verify — 제출 전 서지 확인]**: Romero et al. 2017 (Diet Networks, ICLR); Flagel et al. 2019 (CNN popgen inference, MBE); Gower et al. (genomatnn); Mantes et al. 2023 (Neural ADMIXTURE, Nat Comput Sci); Battey et al. 2021 (popVAE); Korfmann et al. 2023 (deep learning in population genetics, review).
+4. **선형 *클래스*가 이긴다, LogReg 특정 아님 (RQ3 보강, §24.4)**: LinearSVC 79.8% ≈ LogReg 79.6%(손실함수 무관), 게다가 **LinearSVC OSR AUROC 0.957로 전 모델 최고**. sparse 선형(L1/elastic)은 급락 → dense L2 선형+one-hot이 정확도·신뢰성의 핵심. (native-cat 트리·tabular-DL SOTA는 §24.5에서 진행 중.)
+
+**문헌 [verify — 제출 전 서지 확인]**: Romero et al. 2017 (Diet Networks, ICLR); Flagel et al. 2019 (CNN popgen inference, MBE); Gower et al. (genomatnn); Mantes et al. 2023 (Neural ADMIXTURE, Nat Comput Sci); Battey et al. 2021 (popVAE); Korfmann et al. 2023 (DL in popgen, review); Gorishniy et al. 2021 (FT-Transformer, NeurIPS); Arik & Pfister 2021 (TabNet, AAAI). 상세 계보는 docs/02 §8.
 
 ---
 
