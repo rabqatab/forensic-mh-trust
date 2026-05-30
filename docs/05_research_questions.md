@@ -22,10 +22,10 @@
 
 | 제안서 원안 RQ (암묵) | 원안 가정 | 실측 결과 | 현재 위상 |
 |---|---|---|---|
-| "동아시아 5집단을 ≥90% 정확도로 분류하는 **최소 MH 패널**은 몇 개인가?" | 소수 마커로 고정확도 가능 + 90% 달성 가능 | univariate 선택으론 compact 패널 부족(MI/L1 ~55%@200); **강한 선택기·trust 목적함수로 재조사 중** | **PENDING(재조사)** → RQ5 |
+| "동아시아 5집단을 ≥90% 정확도로 분류하는 **최소 MH 패널**은 몇 개인가?" | 소수 마커로 고정확도 가능 + 90% 달성 가능 | ≥90%는 도달 불가(전체도 79.6%); 그러나 **다변량 선택**으로 배치 가능 **trustworthy 최소 패널 존재**(coverage 보장, 10–15× 축소) | **ANSWERED(재정의)** → RQ5 |
 | "CP+OSR로 분류에 신뢰 수준을 부여한다" | base=XGBoost로 충분 | coverage는 충족, 그러나 **OSR은 base에 의해 좌우**(XGBoost 최악) | **확장/심화** → RQ1(핵심)·RQ2·RQ4 |
 
-**핵심 전환**: 부차적이던 "trustworthy 모델"이 — base-model 발견과 함께 — **논문의 핵심 기여**로 올라섰다. 제안서 무게중심이던 "최소 패널"은 *univariate 선택 기준* 음성이지만 — **약한 도구의 한계일 수 있어 강한 선택기·trust 목적함수로 재조사 중(RQ5 PENDING)**; "없다"로 단정하지 않는다.
+**핵심 전환**: 부차적이던 "trustworthy 모델"이 — base-model 발견과 함께 — **논문의 핵심 기여**로 올라섰다. 제안서 무게중심이던 "최소 패널"은 *univariate 선택 기준* 음성이었으나, **다변량 선택**으로 살아남아(§23) — **배치 가능한 trustworthy 최소 패널(coverage 보장 + 정확도–set size–OSR frontier, 10–15× 축소)**로 ANSWERED. 단 원안의 "≥90%"는 도달 불가(정직).
 
 ---
 
@@ -62,9 +62,11 @@
 
 - **질문**: 소수 마커 패널로 (i) 충분한 5집단 정확도, 또는 (ii) 충분한 trust(conformal coverage + 좁은 set + far-OOD 분리)를 **forensic 배치 규모(NGS ~50–200마커)**에서 달성할 수 있는가?
 - **왜 중요**: 제안서 중심 deliverable. forensic 메시지를 "minimal panel" ↔ "genome-wide MH"로 가른다.
-- **상태 [PENDING — 재조사 중]**: 1차 음성결과는 **약한 도구**에 기인하므로 RQ5의 *답*이 아니라 **sub-result로 강등**한다.
-  - **sub-result (유효)**: *univariate* MI-top-N 및 단순 L1은 plateau 없음(MI 200마커 55%, L1 268마커 55%) — **개별(univariate) 선별로는** compact 패널 부족(§21). 이는 "패널이 없다"가 아니라 "약한 선택기로는 못 찾는다"를 의미.
-  - **재조사 (진행)**: (a) **다변량 model-based 선택**(one-hot LogReg 계수 에너지)·RFE·stability selection이 같은 N에서 더 강한 패널을 찾는지(`scripts/27`); (b) 목적함수를 top-1 정확도가 아니라 **forensic trust**(coverage + set size + far-OOD AUROC)로 재정의해 "trust 스펙을 만족하는 최소 N"을 구함. → 결과에 따라 **ANSWERED(배치 패널 존재)** 또는 음성 확정. 진행은 docs/04 §23 예정.
+- **상태 [ANSWERED — 재정의]**: 배치 가능한 최소 패널이 **존재**하며 정확도–trust frontier로 특성화됨(docs/04 §23). 1차 음성(§21)은 RQ5의 답이 아니라 **약한 선택기 sub-result**로 강등.
+  - **sub-result (유효)**: *univariate* MI/단순 L1은 compact 패널 부족(MI 200마커 55%) — "패널 없음"이 아니라 "약한 선택기로는 못 찾음"을 의미.
+  - **rescue (정확도, §23.1)**: **다변량 model-based 선택**(one-hot LogReg 계수 에너지)이 모든 N에서 +8~19p — **25마커 52%**(MI 대비 8× 효율), **1000마커 76.8%**(전체 79.6%의 96%). 신호가 소수 마커에 front-load 가능.
+  - **rescue (trust, §23.2)**: leakage-free 3-way split에서 **conformal coverage가 모든 패널 크기에서 ≥0.93 유지** — 25마커도 valid 90%+ coverage. trade-off는 set size(3.9→2.7)·far-OOD AUROC(0.59→0.76). **minimum forensic panel = 운영 스펙별 최소 N**(valid coverage면 25–50; set ≲3·AUROC ≥0.70이면 ~200–300, 10–15× 축소). 고정 배치 패널(top-50/100/200 마커 리스트) 산출.
+  - **정직한 한계**: 원안의 "소수 마커 ≥90% 정확도"는 도달 불가(전체 패널도 79.6%); 충족된 것은 **trustworthy 최소 패널**(coverage 보장 + 운영점).
 
 ### RQ6 (Robustness) — conformal 보장은 법과학적 열화(allele dropout)에서 살아남는가?
 
@@ -97,7 +99,7 @@
 | RQ2 | conformal이 저정확도에서도 목표 커버리지 | §4.3, §21 | ANSWERED |
 | RQ3 | 57% 천장은 인코딩 아티팩트; one-hot LogReg 79.6% | §13, 부록 A | ANSWERED |
 | RQ4 | ECE ≠ OSR 분리 | §4.4 | ANSWERED |
-| RQ5 | 최소 forensic 패널 존재 여부 (univariate 선택으론 부족 — sub-result) | §21, §23(진행) | PENDING |
+| RQ5 | 배치 가능 최소 forensic 패널 존재 (정확도–trust frontier; 10–15× 축소) | §23 | ANSWERED(재정의) |
 | RQ6 | conformal 보장이 ADO에서 graceful 열화 | §4.5 | ANSWERED |
 | RQ7 | HGDP 외부 코호트 전이 (82.4% @510마커) | §22 | PRELIMINARY |
 

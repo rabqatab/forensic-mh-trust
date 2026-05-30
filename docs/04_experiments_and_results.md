@@ -16,7 +16,7 @@
 | RQ2 | conformal이 저정확도에서도 목표 커버리지 | **§3**, §21 | — |
 | RQ3 | 57% 천장은 인코딩 artifact; one-hot+linear 우위 | **§13**, 부록 A | §7·§8·§9 *(superseded/보조)* |
 | RQ4 | ECE ≠ open-set 분리 | **§14** | — |
-| RQ5 | 최소 forensic 패널 존재 여부 — **재조사 중(PENDING)** | **§23**(강한 선택기) | §21 *(univariate sub-result)*, §7 |
+| RQ5 | 배치 가능한 최소 forensic 패널 존재 (정확도–trust frontier) | **§23**(다변량 선택) | §21 *(univariate sub-result)*, §7 |
 | RQ6 | conformal 보장이 ADO에서 graceful 저하 | **§15** | — |
 | RQ7 | HGDP 외부 코호트 전이 | **§22** *(preliminary, 82.4% @510마커)* | — |
 | (비-RQ) | SSL FM = Paper 2; Reliable-Ae = deferred | §6·§10(FM), §2(Ae) | — |
@@ -322,11 +322,28 @@ confusion: Japanese 25명 중 **11명을 Han으로 오분류**(JPT↔Han 근연 
 
 패널 크기별 conformal **coverage + set size + far-OOD AUROC + empty-set reject**로 "배치 가능한 최소 패널"을 정의(top-1 정확도가 아니라 *신뢰성* 기준). 5-seed, α=0.10, model-based 선택.
 
-> **⚠ leakage 발견·수정**: 마커 선택을 conformal calibration과 **같은 데이터**에서 하면 cal 라벨이 score function에 누수 → coverage가 N↑에 따라 붕괴(0.91→0.60, 초기 버그). **3-way split(select / fit+cal / test, 서로 disjoint)**으로 수정(docs/06 C11).
+> **⚠ leakage 발견·수정(C11)**: 마커 선택을 conformal calibration과 **같은 데이터**에서 하면 cal 라벨이 score function에 누수 → coverage가 N↑에 따라 붕괴(0.91→**0.60**, 초기 버그). **3-way split(select / fit+cal / test, 서로 disjoint)**으로 수정 → coverage 회복(아래).
 
-**[결과 갱신 예정 — leakage-free 재실행 진행 중]** 표: N | acc | coverage | set size | far-OOD AUROC | empty-set reject_OOD. 정의: minimum forensic panel = coverage ≥ 0.90을 유지하며 acceptable set size를 주는 최소 N.
+5-seed, α=0.10, model-based 선택:
 
-**RQ5 상태**: PENDING. 정확도 측 rescue 확인(§23.1) — trust frontier(§23.2) 확정 후 ANSWERED-positive 예정. + 고정 배치 패널(top-50/100/200 마커 리스트)을 `results/baseline/min_panel_trust.json`에 산출(실제 deliverable).
+| N | acc† | **coverage** | set size | far-OOD AUROC | empty-set reject |
+|---|---|---|---|---|---|
+| 25 | 38.4% | **0.932** | 3.86 | 0.588 | 0.00 |
+| 50 | 45.7% | **0.941** | 3.66 | 0.608 | 0.00 |
+| 100 | 48.1% | **0.936** | 3.42 | 0.659 | 0.00 |
+| 200 | 54.1% | **0.954** | 3.15 | 0.702 | 0.00 |
+| 300 | 58.4% | **0.941** | 2.97 | 0.734 | 0.00 |
+| 500 | 59.7% | **0.941** | 2.70 | 0.758 | 0.00 |
+
+†acc는 3-way split로 추정기 학습 데이터가 작아(≈176) §23.1(5-fold)보다 낮음 — **정확도 canonical은 §23.1**(25→52%, 500→70%); 여기 acc는 trust와 같은 split의 참고치.
+
+**핵심:**
+- **conformal coverage가 모든 패널 크기에서 ≥0.93 유지** — 보장은 패널 크기에 robust(C11 수정 후). **25마커 패널도 valid 90%+ coverage** → 작은 배치 패널에서도 신뢰구간 보장.
+- **trade-off는 informativeness(set size)·OOD 분리(AUROC)**: 마커↑ → set 3.86→2.70(더 결정적), AUROC 0.59→0.76(OOD 더 잘 분리). (전체 3042는 set 1.72·AUROC 0.84, §20 — 상한.)
+- **minimum forensic panel = 운영 스펙에 따른 최소 N**: 단순 valid coverage면 **25–50마커**; set size ≲3.0 + AUROC ≥0.70이면 **~200–300마커**(10–15× 축소); 최고 결정성·OSR은 전체 패널.
+- **고정 배치 패널(deliverable)**: top-50/100/200 마커 리스트를 `results/baseline/min_panel_trust.json`(`fixed_panels`)에 산출 — 예: N=100 패널 상위 mh11HYP-28, mh04HYP-11, mh03HYP-09 ….
+
+**RQ5 → ANSWERED (재정의)**: 배치 가능한 **최소 패널이 존재**하며, 정확도(§23.1)–coverage–set size–OSR(§23.2) frontier로 특성화됨. 원안의 "소수 마커 ≥90% 정확도"는 도달 불가(정직)지만, **trustworthy 최소 패널**(coverage 보장 + 운영점 선택, 10–15× 축소)은 충족. univariate 선택의 음성(§21)은 약한 도구 탓이었음.
 
 ---
 
