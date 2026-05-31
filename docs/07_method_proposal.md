@@ -23,7 +23,7 @@
 - **(c) SSL + random-effects encoder** (`scripts/ssl/48`, gnomAD 4091): 정규화가 대규모 SSL을 살리나(vs naive SSL 54%). *[완료: 52.7% — NEGATIVE]*
 - **(d) Variance-as-nonconformity** (`scripts/trust/49`): 변분 random-effects embedding의 posterior 분산 점수 open-set AUROC vs MSP(목표: LinearSVC 0.957 비교). *[CREE 핵심 — 완료: 0.946 ✓]*
 - **(e) 극소표본 robustness** (`scripts/models/50`): n=50/100/200/full에서 CREE vs LogReg 저하 곡선. *[완료: NEGATIVE]*
-- **(f) cross-cohort transfer**: 1KG에 사전학습한 embedding을 HGDP에 전이(RQ7 §22, in-callset 87.3% LogReg 대비).
+- **(f) cross-cohort transfer** (`scripts/rq7/52`): 1KG-EAS5 학습 embedding → HGDP zero-shot 전이(동일 hg38 패널). *[완료: cross-cohort var 0.999 vs MSP 0.633, 코호트 강건 — POSITIVE]*
 
 ## 5. 정직한 위치 (F7 Simplicity + 강한 반박)
 - **raw accuracy로 선형을 이기는 건 우리 데이터상 어렵다(§26)** → 셀링 포인트는 *정확도*가 아니라 **transfer · 내재 분산 open-set · 감사 가능 국소 abstention**.
@@ -40,4 +40,6 @@
 - **(e) 극소표본 = NEGATIVE**: RandEff가 n=50–full 전 구간 LogReg에 −8~10p. shrinkage embedding은 소표본 정확도 이점 없음.
 - **(c) SSL+random-effects = NEGATIVE**: gnomAD 4091 사전학습 후 acc **52.7 ± 3.5%**(far-OOD AUROC 0.632) — naive SSL 54.0·supervised 55.4와 동일. 수축을 *deep* SSL transformer에 붙여도 SSL 한계(§25) 못 넘음. 대비: 같은 수축이 *얕은* RandEff(72.6%)에선 +43p → **정규화 이득은 지배적 inductive bias일 때만** 발현(transformer attention의 별도 과적합이 묻음).
 
-→ **결론(확정)**: CREE의 *정확도·small-n·대규모-SSL* 우위는 없음(선형이 강함, §26; (c)(e) negative). 그러나 **단 하나의 핵심 차별점 — 내재 분산 기반 open-set(d, AUROC 0.946 vs MSP 0.676) — 은 강하게 성립**하고 conformal coverage도 model-agnostic(b, 0.920). 검증된 CREE 형태 = **얕은 변분 random-effects embedding + variance-as-nonconformity**(deep-SSL 경로 아님). honest top-tier 스토리 = "embedding이 정확도론 선형을 못 이기나, *신뢰성(open-set)에선 내재 불확실성으로 post-hoc MSP를 압도*한다." 다음: (f) cross-cohort transfer + 분산 점수 vs conformal 효율 비교로 capability 보강.
+- **★(f) cross-cohort transfer = POSITIVE**: 1KG-EAS5 학습 VRE를 HGDP(미관측 코호트, 18 novel EA 집단)로 zero-shot. cross-cohort open-set **var 0.999 vs MSP 0.633**; MSP는 코호트 경계에서 0.721→0.633 −0.09 붕괴, 분산은 1.000→0.999 유지 → *intrinsic uncertainty는 cohort-shift에 강건*. 메커니즘 검증: 무학습 OTHER-fraction AUROC=0.002/0.063 → 빈도 artifact 아님, *학습된 친숙도*. caveat: cross-continental far-OOD라 절대값 부풀려짐 → 기여는 *var↔MSP 격차+강건성*.
+
+→ **결론(확정)**: CREE의 *정확도·small-n·대규모-SSL* 우위는 없음(선형이 강함, §26; (c)(e) negative). 그러나 **신뢰성 축의 세 capability — 내재 분산 open-set(d, 0.946 vs MSP 0.676) · model-agnostic conformal coverage(b, 0.920) · cross-cohort 전이(f, var 0.999 vs MSP 0.633, 코호트 강건) — 가 모두 성립**. 검증된 CREE 형태 = **얕은 변분 random-effects embedding + variance-as-nonconformity**(deep-SSL 경로 아님). honest top-tier 스토리 = "embedding이 정확도론 선형을 못 이기나, *신뢰성(open-set)에선 내재 불확실성으로 post-hoc MSP를 압도하고 코호트 경계를 넘어 전이*한다." pilot 완료 — 다음은 paper-2 작성(분산↔conformal 효율 정량 비교는 본실험에서).
