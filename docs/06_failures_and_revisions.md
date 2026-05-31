@@ -32,7 +32,7 @@
 | B1 | **Ordinal LabelEncoder**(트리용) | 명목형을 가장 간단히 수치행렬로 → tree 투입 | diplotype은 명목형인데 임의 순서 부여 → tree가 `x≤t` split로 **비인접 범주를 못 묶음**(XGB 52%, RF 57%) | one-hot(+linear) (부록 A) | RQ3 |
 | B2 | **StandardScaler on one-hot** | "선형/거리 모델엔 스케일링 필요"는 통념 | one-hot 지시컬럼을 √(p(1−p))로 나눠 **rare 범주 과증폭** → LogReg 46.6%, kNN 21%로 붕괴 → "트리가 최선"이라는 오판 강화 | 권장 파이프라인에서 제거(79.6%/65%); 음성대조 arm으로만 보존(`scripts/15,19`) | RQ3 |
 | B3 | **Energy-based OSR**(제안서 명시) | OOD 탐지 표준 기법 | XGBoost(tree)는 energy score를 산출하지 않음 → 부적용 | Conformal empty-set 거부 + MSP로 대체(제안서 정정) | RQ1 |
-| B4 | **SSL Foundation Model**(masked + contrastive) | representation 학습으로 정확도·OSR 개선 기대 | 소데이터(n=504)에서 transformer 과적합(**26%**); contrastive는 실데이터 미실행 | **Paper 2로 deferred** — 데이터 확장(all-2504/NYGC) 후 재검정. 코어 구현·테스트는 완료(`fm/`, §6/§10) | 비-RQ |
+| B4 | **SSL Foundation Model**(masked + contrastive) | representation 학습 + 데이터 확장으로 선형 능가 기대 | 데이터 확장 후에도 실패 — gnomAD 4,091(clean) ablation에서 **LogReg 78% ≫ supervised 55 ≥ SSL 54**; scaling(583→4091)은 supervised 수준 회복에 그침(§25) | **ANSWERED-negative**: 병목은 데이터만이 아니라 모델 클래스. Paper 2 재정의("데이터로 FM 키우기"→"왜 선형이 근본 우월한가") | 비-RQ |
 | B5 | **Reliable-Ae**(Wei 2025 phasing penalty) | 고-Ae 마커일수록 phasing-error 위험 → 신뢰도 보정 | 1000G 표준 release에 **완전 EAS trio 0개** → P_phase 추정 불가 | **deferred** — NYGC 30× (602 trios) 필요. 스크립트 hg38-ready(§2) | 비-RQ |
 | B6 | **L1 sparse 축소 패널** | 공동 선별(L1)이 개별 MI 선별을 능가해 ~10× 축소 패널 기대 | 71–474 마커 모두 ≤57% — MI 선별과 동급/이하, 회복 실패 | "compact 패널 없음" **확정**(§21) | RQ5 |
 | B7 | **Deep-ensemble / MC-dropout epistemic UQ** | 앙상블 불확실성으로 OOD 탐지 기대 | epistemic(MI) AUROC ≈ **0.36**(<chance) — OOD 미검출 | MSP/empty-set이 실효 신호(§14) | RQ4 |

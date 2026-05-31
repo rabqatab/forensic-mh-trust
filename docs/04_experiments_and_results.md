@@ -447,15 +447,34 @@ confusion: Japanese 25명 중 **11명을 Han으로 오분류**(JPT↔Han 근연 
 
 ---
 
-## 25. SSL foundation model — 데이터 확장 (Paper 2)  `[비-RQ · 진행 중]`
+## 25. SSL foundation model — 데이터 확장 (Paper 2)  `[비-RQ · ANSWERED-negative]`
 
-SSL FM 병목은 데이터 규모(n=504, §24.2). 공개 풀 추출(`scripts/32·33`): **1000G all-2504**(hg19, 16/22 chr 성공 = 2,578마커) + **gnomAD HGDP+1KG 4,091**(hg38 harmonized, 완료).
+SSL FM 병목은 데이터 규모(n=504, §24.2). 공개 풀 추출(`scripts/32·33`) 후 **통제 ablation 2건**(양 GB10 노드 **병렬**: NFS 스테이징 + sparkq `--node 2`): pretrain 풀만 {none(supervised)/EAS-only/all} 변경, 동일 마커·finetune·contrastive.
 
-**1차 SSL@2504** (`scripts/34`, masked+contrastive, 2,578마커): **44.6% ± 5.1**, far-OOD AUROC **0.527 ± 0.254**(불안정) → n=504 SSL(54.6%)·LogReg(79.6%) **둘 다 못 이김**.
+### 25.1 깨끗한 gnomAD ablation (4,091, hg38, 전체 3,042마커, EAS 583) — `scripts/41`, `ssl_gnomad.json`
+1000G(hg19)과 **동일 마커셋**이라 confound 없음. LogReg baseline 포함:
 
-> **⚠ confounded — 단정 불가**: 1차 결과는 (a) 마커셋(2,578 vs §24의 3,042), (b) **contrastive 추가**(§24 SSL+ft는 masked-only), (c) 프로토콜이 동시에 달라 "데이터 확장이 해쳤다"고 결론낼 수 없음. AUROC ±0.25 불안정성은 SSL 표현이 OOD에 비신뢰함을 시사.
+| 조건 | accuracy | far-OOD AUROC |
+|---|---|---|
+| **LogReg(one-hot)** | **78.0 ± 1.9** | **0.921** |
+| supervised transformer (no pretrain) | 55.4 ± 3.4 | 0.575 |
+| SSL @EAS-only (583) | 48.7 ± 3.9 | 0.536 |
+| SSL @all-4091 | 54.0 ± 5.2 | 0.574 |
 
-**통제 ablation** (`scripts/40`, sparkq `9f6a`, **진행 중**): 동일 마커·동일 finetune·동일 contrastive에서 **pretrain 풀만 {none(supervised) / 504-EAS / 2504-all}** 변경 → 데이터-스케일 효과를 깨끗이 분리. **[결과 대기]** → 이후 gnomAD 4,091(전체 마커)로 최종 검정.
+### 25.2 1000G ablation (2,504, hg19, 2,578마커, EAS 504) — `scripts/40`, `ssl_ablation.json`
+| 조건 | accuracy | far-OOD AUROC |
+|---|---|---|
+| supervised (no pretrain) | 47.2 ± 6.0 | 0.525 |
+| SSL @504 EAS | 42.9 ± 2.3 | 0.537 |
+| SSL @2504 all | 43.6 ± 7.0 | 0.387 |
+
+### 25.3 결론 (Paper 2 — 명확한 negative)
+1. **LogReg(78.0%)가 모든 transformer/SSL(48–55%)을 압도** — hg38 clean·동일 마커에서도 (gnomAD LogReg 78.0 ≈ 우리 hg19 79.6 → cohort/build 무관, RQ1·RQ3 견고).
+2. **SSL pretraining이 supervised를 못 이김** (55.4 ≥ 54.0 ≥ 48.7; 1000G도 47.2 > 43) — 작은 풀에선 오히려 해침.
+3. **데이터 scaling은 SSL을 돕지만(monotone: 583→4091, 48.7→54.0, +5.3) "supervised 수준 회복"에 그침** — LogReg와 24p 격차. 외삽 시 78% 도달엔 수십~수백× 데이터 필요(비현실적).
+4. **확정**: fine-scale forensic MH에서 **SSL FM은 단순 선형을 못 이긴다 — 병목은 데이터만이 아니라 모델 클래스**. (1차 confounded 44.6%[scripts/34]는 이 통제 ablation으로 정리됨: SSL ≈ supervised ≈ 54%, 둘 다 LogReg 78%에 못 미침.) → Paper 2를 "데이터로 FM 키우기"에서 "왜 이 regime에서 선형이 근본 우월한가"로 재정의.
+
+> **인프라 메모**: Node 2(별도 머신 user nvidia)에서 실행 = 공유 NFS(`/mnt/nfs/ssd1`)에 코드+데이터 스테이징(chmod 777) → `uv run`이 venv 자동생성 → 출력을 NFS에 redirect해 Node 1에서 가시화(sparkq cancel/log는 cross-node 불가).
 
 ---
 
