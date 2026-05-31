@@ -194,19 +194,19 @@ synthetic: SSL loss 11.47→6.52; finetune acc 0.36→0.92; **ConformalClassifie
 ## 18. 재현 (commands)
 ```bash
 uv pip install -e ".[dev]" && uv run python -m pytest -q     # 72 tests
-bash scripts/01_download_1000g.sh && bash scripts/06_download_genome_wide.sh
-uv run python scripts/03_run_baseline.py        # chr22 baseline
-uv run python scripts/04_wei2025_phasing.py     # EAS Ae (phasing deferred)
-uv run python scripts/10_conformal_curve.py     # coverage (Plan 2)
-uv run python scripts/11_openset_ood.py         # far-OOD
-uv run python scripts/12_lopo_nearood.py        # near-OOD (LOPO)
-uv run python scripts/13_pca_ablation.py        # PCA ablation (Exp 8)
-uv run python scripts/14_fm_vs_xgboost.py       # FM head-to-head (Exp 10)
-uv run python scripts/15_model_zoo.py           # model zoo (Exp 9)
-uv run python scripts/16_plan2_rf.py            # RF vs XGB Plan 2 (Exp 11)
-uv run python scripts/17_calibration_uq.py      # ECE + Deep Ensembles + MC-Dropout (Exp 14)
-uv run python scripts/18_ado_robustness.py      # ADO degraded-DNA (Exp 15)
-uv run python scripts/19_onehot_cv.py           # one-hot LogReg 5-fold CV (Exp 13)
+bash scripts/data/01_download_1000g.sh && bash scripts/data/06_download_genome_wide.sh
+uv run python scripts/baseline/03_run_baseline.py        # chr22 baseline
+uv run python scripts/baseline/04_wei2025_phasing.py     # EAS Ae (phasing deferred)
+uv run python scripts/trust/10_conformal_curve.py     # coverage (Plan 2)
+uv run python scripts/trust/11_openset_ood.py         # far-OOD
+uv run python scripts/trust/12_lopo_nearood.py        # near-OOD (LOPO)
+uv run python scripts/models/13_pca_ablation.py        # PCA ablation (Exp 8)
+uv run python scripts/models/14_fm_vs_xgboost.py       # FM head-to-head (Exp 10)
+uv run python scripts/models/15_model_zoo.py           # model zoo (Exp 9)
+uv run python scripts/trust/16_plan2_rf.py            # RF vs XGB Plan 2 (Exp 11)
+uv run python scripts/trust/17_calibration_uq.py      # ECE + Deep Ensembles + MC-Dropout (Exp 14)
+uv run python scripts/trust/18_ado_robustness.py      # ADO degraded-DNA (Exp 15)
+uv run python scripts/models/19_onehot_cv.py           # one-hot LogReg 5-fold CV (Exp 13)
 ```
 산출: `results/baseline/*.json`, `results/conformal/*.json`.
 
@@ -221,7 +221,7 @@ uv run python scripts/19_onehot_cv.py           # one-hot LogReg 5-fold CV (Exp 
 
 ## 20. base-model이 OSR을 좌우 — 10-seed 통계적 엄밀성 (A)  `[→ RQ1 · canonical ★]`
 
-`scripts/24_trust_rigor.py` → `results/baseline/trust_rigor.json`. 동일 OOD 셋, 10개 train/test split(30% test, stratified, seed 0–9) 반복, α=0.10. mean±std.
+`scripts/trust/24_trust_rigor.py` → `results/baseline/trust_rigor.json`. 동일 OOD 셋, 10개 train/test split(30% test, stratified, seed 0–9) 반복, α=0.10. mean±std.
 
 | base | far-OOD AUROC | coverage | set size | FPR@95 | empty-set reject_OOD |
 |---|---|---|---|---|---|
@@ -239,7 +239,7 @@ uv run python scripts/19_onehot_cv.py           # one-hot LogReg 5-fold CV (Exp 
 
 > **갱신(2026-05-30)**: 아래는 *univariate MI/L1* 선택 기준 결과 — RQ5의 답이 아니라 **sub-result**(약한 선택기로는 compact 패널 부족)로 강등. 다변량 선택으로 패널이 살아남(§23). "compact 패널 없음"이라는 단정은 철회.
 
-`scripts/25_min_panel_logreg.py` → `results/baseline/min_panel_logreg.json`. fold 내부에서 mutual_info_classif(ordinal 행렬)로 marker top-N 선별(leakage-free) → 해당 컬럼만 one-hot LogReg, 5-fold.
+`scripts/panel/25_min_panel_logreg.py` → `results/baseline/min_panel_logreg.json`. fold 내부에서 mutual_info_classif(ordinal 행렬)로 marker top-N 선별(leakage-free) → 해당 컬럼만 one-hot LogReg, 5-fold.
 
 | markers | accuracy |
 |---|---|
@@ -255,7 +255,7 @@ uv run python scripts/19_onehot_cv.py           # one-hot LogReg 5-fold CV (Exp 
 - **plateau 없음** — 정확도가 marker 수에 거의 단조 증가. ordinal-tree가 200마커/57%에서 평탄해진 것과 정반대(그건 인코딩 아티팩트였음 — 부록 A).
 - **70%+ 정확도는 전 패널(3042) 필요** — 70/75/78% threshold를 만족하는 최소 N은 전부 3042. 작은 "최소 패널"로는 고정확도 불가.
 - → 제안서 원안의 "최소 MH 패널" 메시지가 인코딩 교정 후엔 **"fine-scale EAS는 genome-wide MH가 필요"**로 바뀜. Paper 1의 forensic 함의는 "minimal panel"이 아니라 "genome-wide MH + calibrated UQ".
-- **L1-LogReg 축소 패널도 회복 실패** (`scripts/26_l1_panel_cv.py` → `results/baseline/l1_panel_cv.json`, leakage-free 5-fold one-hot L1):
+- **L1-LogReg 축소 패널도 회복 실패** (`scripts/panel/26_l1_panel_cv.py` → `results/baseline/l1_panel_cv.json`, leakage-free 5-fold one-hot L1):
 
   | L1 C | markers (mean) | accuracy |
   |---|---|---|
@@ -322,7 +322,7 @@ confusion: Japanese 25명 중 **11명을 Han으로 오분류**(JPT↔Han 근연 
 
 ## 23. RQ5 재조사 — 강한 선택기로 최소 패널 살리기  `[→ RQ5]`
 
-`scripts/27_min_panel_strong.py`(정확도) + `scripts/28_min_panel_trust.py`(trust). §21의 음성결과는 **univariate MI**(각 마커를 독립 평가)에 기인 — p≫n 선형 문제에서 약하기로 유명. **다변량 model-based 선택**(fold-train에 전체 one-hot LogReg fit → 마커별 계수 에너지 Σ_class Σ_onehot w² 로 랭킹, fold 내부 = leakage-free)으로 재검.
+`scripts/panel/27_min_panel_strong.py`(정확도) + `scripts/panel/28_min_panel_trust.py`(trust). §21의 음성결과는 **univariate MI**(각 마커를 독립 평가)에 기인 — p≫n 선형 문제에서 약하기로 유명. **다변량 model-based 선택**(fold-train에 전체 one-hot LogReg fit → 마커별 계수 에너지 Σ_class Σ_onehot w² 로 랭킹, fold 내부 = leakage-free)으로 재검.
 
 ### 23.1 정확도 vs 패널 크기 (MI vs model-based, 5-fold)
 
@@ -369,7 +369,7 @@ confusion: Japanese 25명 중 **11명을 Han으로 오분류**(JPT↔Han 근연 
 
 ### 23.3 RFE 교차검증 (independent confirmation)
 
-`scripts/29_min_panel_rfe.py` → `results/baseline/min_panel_rfe.json`. **마커 단위 RFE**(매 단계 one-hot LogReg 재적합 → 마커별 계수 에너지로 약한 마커 제거 → 다음 target까지 반복, fold 내부 leakage-free) — §23.1의 one-shot 랭킹과 **메커니즘이 다른** 강한 wrapper로 교차검증.
+`scripts/panel/29_min_panel_rfe.py` → `results/baseline/min_panel_rfe.json`. **마커 단위 RFE**(매 단계 one-hot LogReg 재적합 → 마커별 계수 에너지로 약한 마커 제거 → 다음 target까지 반복, fold 내부 leakage-free) — §23.1의 one-shot 랭킹과 **메커니즘이 다른** 강한 wrapper로 교차검증.
 
 | N | **RFE** (recursive) | one-shot coef (§23.1) | MI (univariate) |
 |---|---|---|---|

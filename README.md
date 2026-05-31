@@ -54,7 +54,14 @@ src/forensic_mh/
   pipelines/   genome-wide matrix builder, leakage-free nested CV
   fm/          self-supervised microhaplotype transformer (Paper 2 / deferred)
   eval/        GroupKFold + nested-CV evaluation
-scripts/       numbered, runnable end-to-end (download → experiments)
+scripts/       runnable experiments, grouped by stage (see scripts/README.md)
+  data/        download / extract (1000G, HGDP, gnomAD HGDP+1KG)
+  baseline/    Plan-1 baseline + Ae
+  trust/       conformal, open-set, calibration, ADO (RQ1/2/4/6)
+  models/      model zoo: encoding, trees, DL, tabular-SOTA, linear family (RQ3)
+  panel/       minimum-panel selection (RQ5)
+  ssl/         self-supervised foundation-model ablations (Paper 2)
+  rq7/         external-cohort transfer (RQ7)
 docs/          research questions, evidence log, background (see docs/README.md)
 tests/         pytest suite
 ```
@@ -63,15 +70,15 @@ tests/         pytest suite
 
 ```bash
 uv pip install -e ".[dev]" && uv run python -m pytest -q   # test suite
-bash scripts/01_download_1000g.sh && bash scripts/06_download_genome_wide.sh
+bash scripts/data/01_download_1000g.sh && bash scripts/data/06_download_genome_wide.sh
 
 # Headline experiments (canonical numbers)
-uv run python scripts/19_onehot_cv.py        # RQ3 — one-hot LogReg 79.6%
-uv run python scripts/24_trust_rigor.py      # RQ1 — base-model governs OSR (10-seed)
-uv run python scripts/25_min_panel_logreg.py # RQ5 — no compact panel
-uv run python scripts/26_l1_panel_cv.py      # RQ5 — L1 sparse panel
-uv run python scripts/17_calibration_uq.py   # RQ4 — ECE vs OSR
-uv run python scripts/18_ado_robustness.py   # RQ6 — degraded-DNA
+uv run python scripts/models/19_onehot_cv.py        # RQ3 — one-hot LogReg 79.6%
+uv run python scripts/trust/24_trust_rigor.py      # RQ1 — base-model governs OSR (10-seed)
+uv run python scripts/panel/25_min_panel_logreg.py # RQ5 — no compact panel
+uv run python scripts/panel/26_l1_panel_cv.py      # RQ5 — L1 sparse panel
+uv run python scripts/trust/17_calibration_uq.py   # RQ4 — ECE vs OSR
+uv run python scripts/trust/18_ado_robustness.py   # RQ6 — degraded-DNA
 ```
 
 Full script→experiment→RQ map is in [`docs/04`](docs/04_experiments_and_results.md) §18.
