@@ -134,6 +134,79 @@ class ResCNN(nn.Module):
         return self.head(h.mean(-1))
 
 
+class RandEffEmb(nn.Module):
+    """Random-effects embedding (Simchoni & Rosset 2021): per-(marker,code) vector
+    with a per-marker learned Gaussian variance -> adaptive empirical-Bayes shrinkage."""
+    def __init__(self, M, k, d, n_classes, p=0.3):
+        super().__init__()
+        self.M, self.k, self.d = M, k, d
+        self.emb = nn.Embedding(M * k, d)
+        nn.init.normal_(self.emb.weight, std=0.05)
+        self.register_buffer("off", torch.arange(M) * k)
+        self.log_sig = nn.Parameter(torch.zeros(M))
+        self.head = nn.Sequential(nn.LayerNorm(d), nn.Linear(d, n_classes))
+        self.drop = nn.Dropout(p)
+
+    def forward(self, x):
+        return self.head(self.drop(self.emb(x + self.off).mean(1)))
+
+    def re_penalty(self):
+        W = self.emb.weight.view(self.M, self.k, self.d)
+        var = (self.log_sig.exp() ** 2).view(self.M, 1, 1) + 1e-6
+        return ((W ** 2) / (2 * var) + 0.5 * self.log_sig.view(self.M, 1, 1)).mean()
+
+
+class RandEffClassifier(BaseEstimator):
+    """sklearn estimator for the random-effects embedding (codes in [0,k)); exposes
+    predict_proba so the model-agnostic ConformalClassifier can wrap it."""
+
+    def __init__(self, k=8, d=32, epochs=250, lr=1e-3, re_w=1.0, patience=30, seed=0, device=None):
+        self.k = k; self.d = d; self.epochs = epochs; self.lr = lr
+        self.re_w = re_w; self.patience = patience; self.seed = seed; self.device = device
+
+    def _dev(self):
+        return self.device or ("cuda" if torch.cuda.is_available() else "cpu")
+
+    def fit(self, X, y):
+        torch.manual_seed(self.seed); dev = self._dev()
+        X = np.asarray(X); y = np.asarray(y)
+        self.classes_ = np.unique(y); yi = np.searchsorted(self.classes_, y)
+        M = X.shape[1]
+        rng = np.random.RandomState(self.seed); idx = rng.permutation(len(X))
+        nval = max(len(self.classes_), len(X) // 8); va, tr = idx[:nval], idx[nval:]
+        Xt = torch.as_tensor(X[tr], dtype=torch.long).to(dev); yt = torch.as_tensor(yi[tr]).to(dev)
+        Xv = torch.as_tensor(X[va], dtype=torch.long).to(dev); yv = torch.as_tensor(yi[va]).to(dev)
+        self.model_ = RandEffEmb(M, self.k, self.d, len(self.classes_)).to(dev)
+        opt = torch.optim.AdamW(self.model_.parameters(), lr=self.lr)
+        best, best_state, bad = 1e9, None, 0
+        for _ in range(self.epochs):
+            self.model_.train(); opt.zero_grad()
+            loss = F.cross_entropy(self.model_(Xt), yt) + self.re_w * self.model_.re_penalty()
+            loss.backward(); opt.step()
+            self.model_.eval()
+            with torch.no_grad():
+                vl = F.cross_entropy(self.model_(Xv), yv).item()
+            if vl < best - 1e-4:
+                best, bad = vl, 0
+                best_state = {kk: vv.detach().clone() for kk, vv in self.model_.state_dict().items()}
+            else:
+                bad += 1
+                if bad >= self.patience:
+                    break
+        if best_state:
+            self.model_.load_state_dict(best_state)
+        return self
+
+    @torch.no_grad()
+    def predict_proba(self, X):
+        dev = self._dev(); self.model_.eval()
+        X = torch.as_tensor(np.asarray(X), dtype=torch.long).to(dev)
+        return torch.softmax(self.model_(X), 1).cpu().numpy()
+
+    def predict(self, X):
+        return self.classes_[self.predict_proba(X).argmax(1)]
+
+
 _ARCH = {"embmlp": EmbMLP, "cnn1d": CNN1D, "supae": SupAE, "fttransformer": FTTransformer,
          "resnettab": ResNetTab, "rescnn": ResCNN}
 
