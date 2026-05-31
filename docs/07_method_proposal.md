@@ -34,5 +34,10 @@
 - 위험: 분산 점수가 MSP를 못 이기면 open-set 주장 약화 → "trustworthy 전이 표현"으로 후퇴. 선형 정확도 초과는 비현실적 — capability로 frame.
 - Venue: NeurIPS/ICLR(trustworthy ML·UQ·representation) 또는 AISTATS(EB–conformal 이론); 응용은 forensic/genomics venue.
 
-## 7. 2주 pilot
-(d) variance-as-nonconformity가 MSP open-set을 이기는지 + (e) 극소표본에서 LogReg보다 우아하게 저하하는지 — 둘 중 하나라도 positive면 CREE의 *capability* 주장이 성립.
+## 7. 2주 pilot — **결과 (2026-05-31)**
+- **★(d) variance-as-nonconformity = POSITIVE**: 변분 random-effects 분산 점수 open-set **AUROC 0.946 ± 0.010** vs 같은 모델 MSP 0.676 → 내재 분산이 MSP를 압도, LinearSVC(0.957) 근접. **CREE 핵심 capability 성립**(§27.1).
+- **(b) coverage = POSITIVE**: conformal coverage 0.920 유지(embedding-DL에서도 model-agnostic).
+- **(e) 극소표본 = NEGATIVE**: RandEff가 n=50–full 전 구간 LogReg에 −8~10p. shrinkage embedding은 소표본 정확도 이점 없음.
+- **(c) SSL+random-effects**: 진행 중.
+
+→ **결론(현재)**: CREE의 *정확도·small-n* 우위는 없음(선형이 강함, §26). 그러나 **단 하나의 핵심 차별점 — 내재 분산 기반 open-set(d) — 은 강하게 성립**. honest top-tier 스토리 = "embedding이 정확도론 선형을 못 이기나, *신뢰성(open-set)에선 내재 불확실성으로 post-hoc MSP를 압도*한다." 다음: (f) cross-cohort transfer + 분산 점수 vs conformal 효율 비교로 capability 보강.
