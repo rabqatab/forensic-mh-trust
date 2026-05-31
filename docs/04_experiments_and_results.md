@@ -433,6 +433,19 @@ confusion: Japanese 25명 중 **11명을 Han으로 오분류**(JPT↔Han 근연 
 
 → **선형 클래스 우위 확정(LogReg 운빨 아님)**: hinge-loss **LinearSVC 79.8% ≈ logistic LogReg 79.6%** — 손실함수가 달라도 dense 선형+one-hot이 ~80%. **LinearSVC가 OSR AUROC 0.957로 전 모델 최고**(margin 기반 분리). **L1/elastic-net(sparse)은 급락**(56.9/62.5) — RQ5(sparse 선택 실패)와 일관, dense L2가 핵심. 정규화: C=1이 정확도 sweet spot, C↑는 OSR 소폭↑.
 
+**확장 선형 패밀리** (`scripts/43`, `linear_family.json`) — distinct 결정규칙 6종으로 "선형 클래스" 재확인:
+
+| 선형 모델 (결정규칙) | accuracy | far-OOD AUROC |
+|---|---|---|
+| **Multinomial NB** (log-linear) | **82.2 ± 2.9** | 0.654 |
+| **Passive-Aggressive** (hinge, online) | 80.2 ± 3.2 | **0.963** |
+| Ridge (squared loss) | 79.2 ± 3.2 | 0.774 |
+| Nearest-Centroid (Euclidean) | 78.6 ± 4.8 | (no proba) |
+| Perceptron (mistake-driven) | 73.8 ± 3.4 | 0.843 |
+| **LDA (Fisher 판별)** | **INFEASIBLE** (MemoryError) | — |
+
+→ **선형 패밀리 전체가 73–82%** — 6개 distinct 선형 모델이 전부 트리·DL(≤62%)을 압도 → "선형 *클래스*가 이긴다"가 방탄. 추가 발견: (1) **MultinomialNB 82.2%가 최고 정확도**(희소 one-hot이 count-like → log-linear NB에 적합). (2) **margin 기반(Passive-Aggressive 0.963·LinearSVC 0.957)이 OSR 최고** — trust layer엔 이쪽이 LogReg(0.863)보다 우위. (3) **LDA(고전 Fisher)는 적용 불가** — 48k one-hot의 48k×48k 공분산(~9GB) MemoryError → *popgen 전통 선형(LDA)이 p≫n one-hot엔 부적용이고 **정규화 선형(LogReg/LinearSVC/Ridge)이 실용적 대체***. 즉 "선형 우위"는 **정규화** 선형에 한함(비정규화 LDA는 차원의 저주로 탈락).
+
 ### 24.5 Native-cat 트리 + tabular-DL SOTA + small-data SOTA (RQ3 capstone)
 
 **Native-categorical 트리** (`scripts/36`→HGBDT capped, 5-fold): 트리가 *네이티브 범주형*(subset split, ordinal-threshold 아님)으로 처리해도 —
