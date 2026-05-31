@@ -19,10 +19,10 @@
 3. **Feature-localized abstention**: 분산이 marker별 → "marker X가 낯설어 불확실"을 *감사 가능*하게. LogReg/MSP 불가.
 
 ## 4. 검증 실험
-- **(b) embedding + conformal** (`scripts/trust/47`): embedding-DL이 유효 coverage + open-set 받나. *[진행]*
-- **(c) SSL + random-effects encoder** (`scripts/ssl/48`, gnomAD 4091): 정규화가 대규모 SSL을 살리나(vs naive SSL 54%). *[진행]*
-- **(d) Variance-as-nonconformity** (`scripts/trust/49`): 변분 random-effects embedding의 posterior 분산 점수 open-set AUROC vs MSP(목표: LinearSVC 0.957 비교). *[CREE 핵심]*
-- **(e) 극소표본 robustness** (`scripts/models/50`): n=50/100/200/full에서 CREE vs LogReg 저하 곡선.
+- **(b) embedding + conformal** (`scripts/trust/47`): embedding-DL이 유효 coverage + open-set 받나. *[완료: coverage 0.920 ✓]*
+- **(c) SSL + random-effects encoder** (`scripts/ssl/48`, gnomAD 4091): 정규화가 대규모 SSL을 살리나(vs naive SSL 54%). *[완료: 52.7% — NEGATIVE]*
+- **(d) Variance-as-nonconformity** (`scripts/trust/49`): 변분 random-effects embedding의 posterior 분산 점수 open-set AUROC vs MSP(목표: LinearSVC 0.957 비교). *[CREE 핵심 — 완료: 0.946 ✓]*
+- **(e) 극소표본 robustness** (`scripts/models/50`): n=50/100/200/full에서 CREE vs LogReg 저하 곡선. *[완료: NEGATIVE]*
 - **(f) cross-cohort transfer**: 1KG에 사전학습한 embedding을 HGDP에 전이(RQ7 §22, in-callset 87.3% LogReg 대비).
 
 ## 5. 정직한 위치 (F7 Simplicity + 강한 반박)
@@ -38,6 +38,6 @@
 - **★(d) variance-as-nonconformity = POSITIVE**: 변분 random-effects 분산 점수 open-set **AUROC 0.946 ± 0.010** vs 같은 모델 MSP 0.676 → 내재 분산이 MSP를 압도, LinearSVC(0.957) 근접. **CREE 핵심 capability 성립**(§27.1).
 - **(b) coverage = POSITIVE**: conformal coverage 0.920 유지(embedding-DL에서도 model-agnostic).
 - **(e) 극소표본 = NEGATIVE**: RandEff가 n=50–full 전 구간 LogReg에 −8~10p. shrinkage embedding은 소표본 정확도 이점 없음.
-- **(c) SSL+random-effects**: 진행 중.
+- **(c) SSL+random-effects = NEGATIVE**: gnomAD 4091 사전학습 후 acc **52.7 ± 3.5%**(far-OOD AUROC 0.632) — naive SSL 54.0·supervised 55.4와 동일. 수축을 *deep* SSL transformer에 붙여도 SSL 한계(§25) 못 넘음. 대비: 같은 수축이 *얕은* RandEff(72.6%)에선 +43p → **정규화 이득은 지배적 inductive bias일 때만** 발현(transformer attention의 별도 과적합이 묻음).
 
-→ **결론(현재)**: CREE의 *정확도·small-n* 우위는 없음(선형이 강함, §26). 그러나 **단 하나의 핵심 차별점 — 내재 분산 기반 open-set(d) — 은 강하게 성립**. honest top-tier 스토리 = "embedding이 정확도론 선형을 못 이기나, *신뢰성(open-set)에선 내재 불확실성으로 post-hoc MSP를 압도*한다." 다음: (f) cross-cohort transfer + 분산 점수 vs conformal 효율 비교로 capability 보강.
+→ **결론(확정)**: CREE의 *정확도·small-n·대규모-SSL* 우위는 없음(선형이 강함, §26; (c)(e) negative). 그러나 **단 하나의 핵심 차별점 — 내재 분산 기반 open-set(d, AUROC 0.946 vs MSP 0.676) — 은 강하게 성립**하고 conformal coverage도 model-agnostic(b, 0.920). 검증된 CREE 형태 = **얕은 변분 random-effects embedding + variance-as-nonconformity**(deep-SSL 경로 아님). honest top-tier 스토리 = "embedding이 정확도론 선형을 못 이기나, *신뢰성(open-set)에선 내재 불확실성으로 post-hoc MSP를 압도*한다." 다음: (f) cross-cohort transfer + 분산 점수 vs conformal 효율 비교로 capability 보강.
