@@ -89,12 +89,13 @@ def main() -> None:
         with torch.no_grad():
             pte = F.softmax(m(torch.as_tensor(Xte, dtype=torch.long).to(DEV), sample=False), 1).cpu().numpy()
             poo = F.softmax(m(torch.as_tensor(Xood, dtype=torch.long).to(DEV), sample=False), 1).cpu().numpy()
-        msp_in, msp_oo = pte.max(1), poo.max(1)
+        from forensic_mh.uq.openset import msp_score
         var_in = m.var_score(torch.as_tensor(Xte, dtype=torch.long).to(DEV))
         var_oo = m.var_score(torch.as_tensor(Xood, dtype=torch.long).to(DEV))
         rec["acc"].append(float((pte.argmax(1) == yte).mean()))
-        rec["auroc_msp"].append(ood_auroc(msp_in, msp_oo))
-        rec["auroc_var"].append(ood_auroc(-var_in, -var_oo))     # higher variance = OOD
+        # ood_auroc wants an OOD-ness score (higher = more OOD)
+        rec["auroc_msp"].append(ood_auroc(msp_score(pte), msp_score(poo)))   # 1 - max softmax
+        rec["auroc_var"].append(ood_auroc(var_in, var_oo))                   # higher posterior variance = OOD
         print(f"seed {seed}: acc={rec['acc'][-1]:.3f} AUROC var={rec['auroc_var'][-1]:.3f} msp={rec['auroc_msp'][-1]:.3f}", flush=True)
 
     out = {"model": "CREE (variational random-effects)", **{k: {"mean": round(float(np.mean(v)), 4),
