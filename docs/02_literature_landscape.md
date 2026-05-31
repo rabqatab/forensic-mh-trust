@@ -422,3 +422,27 @@ Ancestry용 표준 informativeness measure는:
 **DNA LM (novelty 옵션3 landscape)**: NucEL (AAAI 2026), MxDNA (NeurIPS 2024) — DNA 사전학습(우리 마커는 원시서열 아니라 직접 적용은 아님).
 
 > **활용 액션**: (a) **TabPFN을 축소 패널(top-200)로 추가 테스트**; (b) **Scarf를 Paper 2 SSL 근거로 인용**; (c) **Gibbs-Candès를 §4.5 RQ6 future-work 처방으로 인용**.
+
+---
+
+## 9부. Embedding을 *잘 만든* 접근 — Paper 2 후속 (2026-05-31)
+
+> 동기: §24.2–24.3에서 학습 embedding 기반 DL(EmbMLP 29.7%·SupAE 32.5%·ResNet-tab 33.5%)이 one-hot 선형(79.6%)·심지어 one-hot MLP(50–56%)보다도 낮았다. 원인 = (i) n=504로 좋은 embedding 학습 불가, (ii) embedding bottleneck이 unseen-diplotype/명시 신호를 폐기(§24.3). → "embedding을 *실제로* 잘 작동시킨" 선행을 셋으로 정리하고 **모두 실험**(scripts/models/44·45·46, 양 노드). 서지 검증됨.
+
+### 9-A. 유전형 p≫n 전용 embedding
+- **Diet Networks** (Romero et al. 2017, *ICLR*) — 각 feature(SNP/one-hot)를 "샘플 전체 프로파일"로 임베딩 + **보조망이 첫 층 가중치를 예측** → p≫n 파라미터 폭발 회피. *우리 EmbMLP는 프록시였고 이 weight-prediction은 미시도* → **scripts/models/44 (DietNet)**.
+- autoencoder/VAE 유전형 임베딩: popVAE (Battey 2021)·Neural ADMIXTURE (Mantes 2023, *Nat Comput Sci*)·*Hybrid AE with orthogonal latent space* (2022) — 구조 *표현*엔 좋으나 분류는 선형에 짐(우리 SupAE).
+
+### 9-B. 대규모 사전학습 transfer (small-n 우회)
+- **Nucleotide Transformer** (Dalla-Torre et al. 2024, *Nature Methods*)·**Genomics-FM** (bioRxiv 2024)·DNABERT/HyenaDNA — 거대 코퍼스 사전학습 임베딩 transfer. **caveat**: 염기 *서열* 임베딩이라 유전형 행렬 직접 적용 불가 → MH amplicon 서열(<300bp)을 NT로 임베딩하는 우회 → **scripts/models/46 (NT-transfer)**.
+
+### 9-C. 더 나은 범주형-tabular embedding
+- **On Embeddings for Numerical Features in Tabular DL** (Gorishniy, Rubachev & Babenko 2022, *NeurIPS*) — *임베딩 방식*이 성능 좌우.
+- **Random Effects for High-Cardinality Categorical / LMMNN** (Simchoni & Rosset 2021, *NeurIPS*) — 고-카디널리티 범주형을 *혼합모형 random-effect*로 임베딩(평균으로 shrinkage). 우리 diplotype이 고-카디널리티(마커당 ≤278종) → **scripts/models/45 (random-effects embedding)**.
+- Entity Embeddings (Guo & Berkhahn 2016 [verify]) · categorical encoder 벤치마크 (Matteucci et al. 2023, *NeurIPS* D&B) · DHE (Kang et al. 2021, *KDD*) · Feat2Vec (*ICLR* 2018).
+
+### 9-D. 결정적 caveat — 문헌이 우리 negative를 뒷받침
+- **"Genomic Foundationless Models: Pretraining Does Not Promise Performance"** (bioRxiv 2024) — 유전체에서 사전학습/임베딩이 *항상* 단순 방법을 이기진 않음.
+- 다수 서베이: **"좋은 임베딩은 규모에서 온다"** → n=504/4091에서 임베딩이 진 건 *방법*이 아니라 *규모* 문제. 우회 = (9-B) 외부 대규모 transfer 또는 (9-A) Diet-Net식 파라미터 공유.
+
+→ **실험 계획**: 44(DietNet)·45(RandomEffectEmb)·46(NT-transfer)을 동일 프로토콜(genome-wide, 5-fold, acc+far-OOD AUROC)로, LogReg 79.6%·EmbMLP 29.7% 대비. 결과는 docs/04 §27 + 본 9부에 반영.
