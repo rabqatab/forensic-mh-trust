@@ -78,7 +78,7 @@
 
 - **질문**: 1000G(hg19) 학습 모델이 HGDP WGS(hg38) 중첩 집단(Han↔CHB+CHS, Japanese↔JPT, Dai↔CDX)으로 전이되는가? build 조화(hg19↔hg38) 품질은?
 - **왜 중요**: 단일 코호트 일반화의 honest 검증. 외부 타당성.
-- **상태 [PRELIMINARY ANSWERED]**: 5/22 chroms(chr1·19–22, **510/3042 마커**)로 전이 = **82.4%**(Han 0.97 / Japanese 0.56 / Dai 1.0, n=4). unseen diplotype 0.43(hg19↔hg38)에도 견고. RQ5에 비춰 전체 마커 시 상향 예상(보수적 하한). 전체 추출(백그라운드 진행) 완료 후 `scripts/23` 재실행으로 final. 상세 docs/04 §22. (한계: Dai n=4 소표본, 베트남(KHV) 매칭 없음, Japanese↔Han 근연 오분류.)
+- **상태 [ANSWERED]**: **in-callset 깨끗한 전이**(gnomAD HGDP+1KG harmonized, hg38, 전체 3,042마커; 1KG·HGDP 같은 callset → build mismatch 없음). 1KG-EAS 학습 → HGDP-EAS 테스트 = **87.3%**(Han 1.00 / Japanese 0.73 / Dai 0.60 n=5). **unseen diplotype 0.43→0.024로 소멸**, transfer(87.3%) > within-HGDP CV(59.3%). cross-build 예비(82.4% @510마커)는 보수적 하한이었음(§22). 상세 docs/04 §22. (한계: Dai n=5 소표본, KHV 매칭 없음, Japanese↔Han 근연 오분류.)
 
 ---
 
@@ -101,12 +101,12 @@
 | RQ4 | ECE ≠ OSR 분리 | §4.4 | ANSWERED |
 | RQ5 | 배치 가능 최소 forensic 패널 존재 (정확도–trust frontier; 10–15× 축소) | §23 | ANSWERED(재정의) |
 | RQ6 | conformal 보장이 ADO에서 graceful 열화 | §4.5 | ANSWERED |
-| RQ7 | HGDP 외부 코호트 전이 (82.4% @510마커) | §22 | PRELIMINARY |
+| RQ7 | HGDP 외부 코호트 전이 (in-callset 87.3%, clean hg38) | §22 | ANSWERED |
 
 ---
 
 ## 5. 다음 단계 (RQ 관점)
 
-1. **RQ7 final 갱신**: 예비 전이 완료(82.4% @510마커, docs/04 §22). HGDP 전체 추출(백그라운드) 완료 시 `scripts/23` 재실행 → §22/Paper 1 §4.6 final 수치 갱신.
+1. **RQ7 완료**: in-callset 87.3%(clean hg38, §22). Paper 1 §4.6에 반영.
 2. **Paper 1 spine 정렬**: RQ1을 primary로, RQ3를 enabling, RQ2/4를 method-validity, RQ5/6/7을 forensic-realism으로 §1 contribution bullet 재배열(현 draft와 일치 확인).
 3. **citation 검증**: `[verify]` 항목(Vovk, Angelopoulos&Bates, Zhang 2025, OSR survey, Olsson 2025) 프로그램적 확인 — RQ별 related-work 앵커.

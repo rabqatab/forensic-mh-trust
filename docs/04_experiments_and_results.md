@@ -18,7 +18,7 @@
 | RQ4 | ECE ≠ open-set 분리 | **§14** | — |
 | RQ5 | 배치 가능한 최소 forensic 패널 존재 (정확도–trust frontier) | **§23**(다변량 선택) | §21 *(univariate sub-result)*, §7 |
 | RQ6 | conformal 보장이 ADO에서 graceful 저하 | **§15** | — |
-| RQ7 | HGDP 외부 코호트 전이 | **§22** *(preliminary, 82.4% @510마커)* | — |
+| RQ7 | HGDP 외부 코호트 전이 (in-callset 87.3%) | **§22** *(ANSWERED, clean hg38)* | — |
 | (비-RQ) | SSL FM = Paper 2; Reliable-Ae = deferred | §6·§10(FM), §2(Ae) | — |
 
 ---
@@ -268,11 +268,35 @@ uv run python scripts/19_onehot_cv.py           # one-hot LogReg 5-fold CV (Exp 
 
 ---
 
-## 22. RQ7 — HGDP 외부 코호트 전이 (preliminary, 5/22 chroms)  `[→ RQ7 · preliminary]`
+## 22. RQ7 — HGDP 외부 코호트 전이 (in-callset, clean)  `[→ RQ7 · ANSWERED]`
 
-`scripts/22_extract_hgdp.py`(원격 추출) + `scripts/23_hgdp_transfer.py` → `results/baseline/hgdp_transfer.json`. **1000G EAS(hg19) 학습 → HGDP WGS(hg38) 독립 코호트 테스트.** 3-class 매핑(Han=CHB+CHS, Japanese=JPT, Dai=CDX; KHV는 HGDP 매칭 없음 → 제외). marker는 NAME으로 매칭, `OneHotEncoder(handle_unknown="ignore")`가 build/allele mismatch 흡수.
+**1KG-EAS 학습 → HGDP-EAS 테스트** (독립 코호트). 3-class 매핑(Han=CHB+CHS, Japanese=JPT, Dai=CDX; KHV는 HGDP 매칭 없음 → 제외). LogReg(one-hot).
 
-> **상태**: HGDP 추출이 chr1·19–22(5/22)만 완료된 시점의 **예비 결과**. genome-wide 추출 완료 시 동일 스크립트 재실행으로 갱신(현재 백그라운드 진행 중).
+### 22.1 In-callset 최종 (gnomAD HGDP+1KG harmonized, hg38, 전체 3,042마커) — `scripts/42`, `rq7_incallset.json`
+1KG·HGDP가 **같은 callset(GRCh38)** → liftover/build mismatch 없음.
+
+| 항목 | 값 |
+|---|---|
+| markers | **3,042 (full, hg38)** |
+| train 1KG | 461 (Han 266 / Japanese 102 / Dai 93) |
+| test HGDP | 71 (Han 40 / Japanese 26 / Dai 5) |
+| **transfer accuracy** | **87.3%** |
+| per-class recall | **Han 1.00**(40/40) / Japanese 0.731(19/26) / Dai 0.60(n=5) |
+| **unseen diplotype fraction** | **0.024** (cross-build였던 0.43에서 소멸) |
+| within-HGDP 3-fold CV | 0.593 ± 0.073 |
+
+confusion(rows=true): Dai[3,2,0]/Han[0,40,0]/Japanese[0,7,19] — Han 완벽, Japanese 7명→Han(JPT↔Han 근연, 타당), Dai n=5 비신뢰.
+
+**해석:**
+- **모델이 독립 코호트로 깨끗이 전이됨 (87.3%)** — build mismatch 제거(unseen 43%→2.4%) + 전체 마커로 예비 82.4%에서 **상향**(예측대로 "82.4%는 보수적 하한"이 맞음).
+- **transfer(87.3%) > within-HGDP CV(59.3%)** — 1KG 461명 대형 학습셋이 HGDP 71명 자체 학습보다 잘 일반화(강한 generalization 신호).
+- 틀리는 방식이 생물학적으로 합리적(Japanese↔Han 근연). 한계: Dai n=5 소표본, KHV(베트남) HGDP 매칭 없음.
+
+→ **RQ7 ANSWERED**: trust layer + LogReg(one-hot)이 독립 코호트로 전이.
+
+### 22.2 (참고) Cross-build 예비 — build mismatch 효과 (scripts/22·23, hg19→hg38, 510마커)
+
+> 아래는 **build mismatch가 있던 예비**(1000G hg19 학습 → HGDP hg38, 5/22 chr). 22.1과 비교하면 build 조화의 가치가 보임(unseen 43% vs 2.4%, acc 82.4 vs 87.3).
 
 | 항목 | 값 |
 |---|---|
@@ -292,7 +316,7 @@ confusion: Japanese 25명 중 **11명을 Han으로 오분류**(JPT↔Han 근연 
 - **약점**: Japanese recall 0.56(JPT↔Han 근연 + 마커 부족 → 전체 마커로 개선 여지).
 - **한계**: Dai n=4(소표본, 1.0 recall 비신뢰), KHV(베트남) HGDP 매칭 없음, 예비(5/22 chroms).
 
-→ RQ7 **preliminary ANSWERED** (전체 추출 후 final 갱신).
+→ (이 cross-build 예비는 §22.1 in-callset 최종으로 대체됨 — build mismatch 효과 비교용으로 보존.)
 
 ---
 

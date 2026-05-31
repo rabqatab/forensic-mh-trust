@@ -28,7 +28,7 @@ Five-class East-Asian classification, genome-wide **3,042 microhaplotypes**, 504
 - **The "57% ceiling" was an encoding artifact, not an F_ST limit** — nominal diplotypes one-hot-encoded (no scaler) lift a regularized linear model from ~57% to **79.6%** (see [`docs/04` Appendix A](docs/04_experiments_and_results.md)).
 - **A deployable minimum panel exists** — univariate (MI) selection found none, but **multivariate selection front-loads the signal**: 25 markers reach 52% (8× more marker-efficient than MI) and 1,000 reach 76.8% (96% of the full-panel 79.6%) — confirmed by two independent selectors (one-shot coefficient ranking and recursive feature elimination, agreeing within ~2 points). Crucially, **conformal coverage holds (≥0.93) at every panel size** — even a 25-marker panel gives valid prediction sets; markers trade off only set-size and OOD-separation. A 200–300 marker panel (10–15× reduction) meets a practical forensic trust spec; fixed deployable panels (top-50/100/200 markers) are emitted as a deliverable.
 - **Degraded-DNA limit** — under simulated allele dropout the conformal guarantee degrades measurably (coverage 0.91 → 0.80 at 50% ADO): exchangeability is violated, a forensic-realism limit competitors do not expose.
-- **External-cohort transfer (preliminary)** — a 1000G-trained model transfers to an independent cohort (HGDP WGS, hg38) at **82.4%** on 3 overlapping populations with only 510/3042 markers and 43% build-mismatched diplotypes; full-panel result pending genome-wide extraction.
+- **External-cohort transfer** — trained on 1000 Genomes EAS, the model transfers to an independent cohort (HGDP) at **87.3%** on three overlapping populations, validated *in-callset* on the harmonized gnomAD HGDP+1KG GRCh38 release (full 3,042 markers, build-mismatch eliminated: unseen diplotypes 43% → 2.4%). Transfer accuracy exceeds within-HGDP cross-validation, a strong generalization signal.
 
 ## Research questions
 
@@ -42,7 +42,7 @@ The project is organized around the research questions in **[`docs/05_research_q
 | RQ4 | Calibration (ECE) ≠ open-set separability (AUROC) | ✅ |
 | RQ5 (scope) | A deployable minimum panel exists (accuracy–trust frontier, 10–15× smaller) | ✅ (re-scoped) |
 | RQ6 | Conformal coverage degrades under degraded-DNA (ADO) | ✅ |
-| RQ7 | The model + trust layer transfers to an external cohort (HGDP) | 🔶 preliminary (82.4%) |
+| RQ7 | The model + trust layer transfers to an external cohort (HGDP) | ✅ (in-callset 87.3%) |
 
 ## Repository structure
 
