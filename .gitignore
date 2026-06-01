@@ -18,9 +18,16 @@ build/
 .vscode/
 .idea/
 
-# Stray tabix indexes from remote HGDP extraction (land in cwd)
+# Stray tabix/bcf indexes from remote extraction (land in cwd)
 *.tbi
+*.csi
 hgdp_wgs.*.vcf.gz*
+hgdp1kgp_chr*.bcf*
+
+# Build / compile caches (land in cwd)
+catboost_info/
+torchinductor_*/
+.torchinductor/
 
 # Course assignment / paperwork artifacts (not for the public repo)
 *.docx
