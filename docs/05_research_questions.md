@@ -107,6 +107,12 @@
 
 ## 5. 다음 단계 (RQ 관점)
 
-1. **RQ7 완료**: in-callset 87.3%(clean hg38, §22). Paper 1 §4.6에 반영.
-2. **Paper 1 spine 정렬**: RQ1을 primary로, RQ3를 enabling, RQ2/4를 method-validity, RQ5/6/7을 forensic-realism으로 §1 contribution bullet 재배열(현 draft와 일치 확인).
-3. **citation 검증**: `[verify]` 항목(Vovk, Angelopoulos&Bates, Zhang 2025, OSR survey, Olsson 2025) 프로그램적 확인 — RQ별 related-work 앵커.
+**모든 RQ ANSWERED + Paper 1 마감 항목 완료 (2026-06-04):**
+1. ✅ **RQ7 반영**: in-callset 87.3%(clean hg38, §22) → Paper 1 §4.6 작성 완료(placeholder 제거).
+2. ✅ **Paper 1 spine 정렬**: RQ1 primary / RQ3 enabling / RQ2·4 method-validity / RQ5·6·7 forensic-realism — 현 draft와 일치.
+3. ✅ **citation 검증**: 6건 프로그램적 확인(CrossRef/arXiv/publisher, DOI 확보). **"Olsson 2025"는 실재 불가 → Papangelou et al. 2025로 교정**(Paper 1·docs/02 동시 반영). 잔존 `[verify]` = 0.
+
+**남은 선택지 (RQ 외 산출물):**
+- (선택) Paper 1 §6에 CREE(Paper 2) future-work teaser 1줄.
+- (미래·별개) Paper 2(CREE) 본 논문 — pilot 완료(docs/07 §7: d/b/f positive, c/e negative), 본실험 DEFERRED.
+- 강의 final(DFS5006) 개정 필요 여부 — 사용자 확인 대기.

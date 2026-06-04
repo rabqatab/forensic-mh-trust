@@ -1,7 +1,7 @@
 # 문헌 정독 + 경쟁 논문 매핑 (v1)
 
 **검토일**: 2026-05-26
-**갱신**: 2026-05-30 — Notion §5(Previous Studies) 동기화 → **7부** 추가(댓글 제안 + forward-citation); **8부** 추가(DL-popgen 아키텍처·tabular-DL SOTA·확장 데이터 자원 = §24 실험 근거).
+**갱신**: 2026-05-30 — Notion §5(Previous Studies) 동기화 → **7부** 추가(댓글 제안 + forward-citation); **8부** 추가(DL-popgen 아키텍처·tabular-DL SOTA·확장 데이터 자원 = §24 실험 근거). 2026-05-31 — **9부**(embedding을 *잘* 만든 접근, Paper 2). 2026-06-01 — **10부** 추가(Notion §5.10·§5.11 댓글 2차: 비-ML X-InDel·친족 DeepKin/LR·BGA Alladio 2022·DL 집단구조 HaploNet/DietNet-bioRxiv).
 **검색 범위**: PMC, PubMed, FSI:Genetics, Frontiers, bioRxiv, ResearchGate, Semantic Scholar(forward-citation)
 **제한**: ScienceDirect / Springer 일부 paywall — abstract 위주 확보
 
@@ -260,8 +260,8 @@ Ancestry용 표준 informativeness measure는:
 - **Zhang H (2025) JTGG** — `03` 옵션 1, 2, 3, 4 anchor (위 3부 참고)
 
 ### 옵션 1 (Conformal + Open-set)
-- Olsson H et al. (2025) Frontiers Bioinf — first CP in genomic medicine (no forensic)
-- Liu Y et al. (2024) IJCV — open-set/OOD 서베이
+- Papangelou et al. (2025) Frontiers Bioinf (doi:10.3389/fbinf.2025.1507448) — CP in genomic medicine (no forensic) [이전 "Olsson 2025" 오귀속 교정]
+- Yang, Zhou, Li & Liu (2024) IJCV (doi:10.1007/s11263-024-02117-4) — generalized OOD 서베이 [이전 "Liu 2024" = 말미저자 표기 교정]
 
 ### 옵션 2 (Bayesian Deep)
 - Toneyan & Koo (2024) DEGU — uncertainty in genomic DL
@@ -396,10 +396,10 @@ Ancestry용 표준 informativeness measure는:
 
 ### 8-D. UQ/conformal·open-set 방법 레퍼런스 (Paper 1 spine — 6부 옵션1 보강)
 
-- Vovk, Gammerman, Shafer *Algorithmic Learning in a Random World* (conformal 이론) [verify]; Angelopoulos & Bates *A Gentle Introduction to Conformal Prediction* [verify] — split/Mondrian CP 근거.
-- Olsson et al. (2025) Frontiers Bioinf — CP-in-genomic-medicine 최초(forensic 미적용, 6부 기재).
-- Liu et al. (2024) IJCV — open-set/OOD 서베이(6부 기재).
-> Paper 1 인용은 모두 `paperwork/Paper1_draft` §References의 [verify] 절차로 확정.
+- Vovk, Gammerman & Shafer *Algorithmic Learning in a Random World*, Springer 1st ed. 2005 (doi:10.1007/b106715)·2nd ed. 2022 (doi:10.1007/978-3-031-06649-8); Angelopoulos & Bates 2023 *Conformal Prediction: A Gentle Introduction*, FnT ML 16(4):494–591 (arXiv:2107.07511) — split/Mondrian CP 근거. **[검증완료]**
+- Papangelou et al. (2025) Frontiers Bioinf 5:1507448 (doi:10.3389/fbinf.2025.1507448) — CP-in-genomic-medicine(forensic 미적용, 6부 기재). **[검증완료; 이전 "Olsson et al. 2025" 오귀속 교정]**
+- Geng, Huang & Chen 2021 *Recent Advances in Open Set Recognition: A Survey*, IEEE TPAMI 43(10):3614–3631 (doi:10.1109/TPAMI.2020.2981604); Yang, Zhou, Li & Liu 2024 *Generalized OOD Detection: A Survey*, IJCV 132:5635–5662 (doi:10.1007/s11263-024-02117-4) — open-set/OOD 서베이(6부 기재). **[검증완료]**
+> Paper 1 §References 인용은 모두 CrossRef/arXiv/publisher로 **프로그램적 검증 완료**(DOI 확보, 2026-06-04).
 
 ### 8-E. LexiconArxiv ML-method 선행연구 (arxiv-verified, 2026-05-30)
 
@@ -446,3 +446,59 @@ Ancestry용 표준 informativeness measure는:
 - 다수 서베이: **"좋은 임베딩은 규모에서 온다"** → n=504/4091에서 임베딩이 진 건 *방법*이 아니라 *규모* 문제. 우회 = (9-B) 외부 대규모 transfer 또는 (9-A) Diet-Net식 파라미터 공유.
 
 → **실험 계획**: 44(DietNet)·45(RandomEffectEmb)·46(NT-transfer)을 동일 프로토콜(genome-wide, 5-fold, acc+far-OOD AUROC)로, LogReg 79.6%·EmbMLP 29.7% 대비. 결과는 docs/04 §27 + 본 9부에 반영.
+
+---
+
+## 10부. Notion §5 동기화 2차 — 댓글 제안 (2026-06-01)
+
+> Notion "5. 관련 연구" 페이지 댓글(2026-06-01)로 추가 제안된 선행연구. Notion **§5.10**(비-ML forensic 마커) + **§5.11**(친족·대륙조상·딥러닝 집단구조 3묶음)에 대응. 7부(2026-05-30 동기화)의 연장.
+> **관찰 메모(댓글)**: "forensic-genetics ML은 해당 분야에서 최근까지도 *간단한 모델*(고전 통계·로지스틱·RF/XGBoost) 위주" → 우리 **RQ3 · docs/04 §24.4–24.5**(규제 선형이 FT-Transformer·TabNet·TabPFN 등 복잡 모델 능가)와 같은 방향의 외부 정황. 우리 기여는 정확도 경쟁이 아니라 **신뢰정량화(conformal/open-set) 축**.
+> **서지 주의**: Wiley·Genome Research·bioRxiv 본문 paywall/인증벽 → Crossref/OpenAlex/PMC로 서지·abstract 확보. 제출 전 CrossRef 재확인 권장.
+
+### 10-A. 비-ML forensic 마커 패널 (Notion §5.10)
+
+#### 구이저우 Miao·Bouyei X-염색체 multi-InDel 패널 (BMC Genomics 2024)
+**제목**: *Exploring the forensic effectiveness and population genetic differentiation in Guizhou Miao and Bouyei group by the self-constructed panel of X chromosomal multi-insertion/deletions*
+**URL**: https://link.springer.com/article/10.1186/s12864-024-11088-2 — DOI 10.1186/s12864-024-11088-2 (오픈)
+**저자**: Huang, Gu, Ran, Chen, Tian, Zhong, Ren, Wang, Yang, Ji, Wan, Huang, Zhang, Jin (구이저우 의대 forensic-genetics 그룹)
+- 자작 **22 X-multi-InDel + 1 X-STR** 패널, 종합 식별력 **>0.999999999**, 개인식별·친자감정(parentage). 구이저우 3집단 저-FST(저분화). **방법 = 고전 forensic 통계(식별력·HWE·LD·집단거리, ML 미사용)**.
+- **차별점**: 같은 EAS(중국 소수민족) forensic 마커 도메인이나 X-InDel·고전통계·kinship/ID — 우리 상염색체 MH diplotype·ML·ancestry 분류·신뢰층과 구분. §7-B 구이저우 7민족 MH(JTGG 2025)와 같은 그룹(Xiaoye Jin). "근연 EAS 저분화"의 독립 사례.
+
+### 10-B. 친족(kinship) 분석 (Notion §5.11.1)
+
+#### DeepKin — CNN으로 저커버리지/고대 DNA 혈연 예측 (Mol. Ecol. Resour. 2025)
+**제목**: *DeepKin: Predicting Relatedness From Low-Coverage Genomes and Palaeogenomes With Convolutional Neural Networks* (Güler, Yılmaz, Katırcıoğlu, Kantar, Ünver, Vural, Altınışık, Akbas, Somel)
+**URL**: https://onlinelibrary.wiley.com/doi/full/10.1111/1755-0998.70032 — DOI 10.1111/1755-0998.70032
+- **CNN을 시뮬레이션으로 생성한 유전 데이터로 학습** → 저커버리지/palaeogenome 3촌까지 혈연 예측, 공유 SNP 10K↑ 정확도 >90%, 기존 READv2 동급↑.
+- **차별점**: 친족 축(우리 ancestry 분류와 다름, §5.4 계열). *시뮬레이션 학습데이터*가 데이터 구축 측면 참고가치. CP/OSR 없음.
+
+#### 동적 SNP 선택 우도비 친족 추론 (Frontiers in Genetics 2025)
+**제목**: *A likelihood ratio framework for inferring close kinship from dynamically selected SNPs* (Ge, Budowle, Cariaso, Mittelman, Mittelman)
+**URL**: https://pmc.ncbi.nlm.nih.gov/articles/PMC12325062/
+- **gnomAD v4** 큐레이션 222,366 SNP, 동적 SNP 선택(MAF·유전거리 임계), **우도비(LR)·IBD 고전 통계(ML 아님)**. 1000G 1,200 부모-자녀 등 5집단(EAS 포함)으로 2촌까지 검증.
+- **차별점**: 친족·고전통계. *gnomAD v4 활용*은 우리 RQ7(gnomAD HGDP+1KG harmonize, §8-C)과 데이터 측면 접점.
+
+### 10-C. 대륙 간·지리 조상 추론 (Notion §5.11.2)
+
+#### ★ 다변량 통계 + ML BGA (Scientific Reports 2022) — RQ3 외부 입증
+**제목**: *Multivariate statistical approach and machine learning for the evaluation of biogeographical ancestry inference in the forensic field* (Alladio, Poggiali, Cosenza, Pilli)
+**URL**: https://pmc.ncbi.nlm.nih.gov/articles/PMC9148302/ — Scientific Reports (2022)
+- 3,557명(1000G+SGDP+HGDP), 상용 forensic SNP 패널 4종(EUROFORGEN-128·ForenSeq-55·MAPlex-144·ThermoFisher-165). PCA + **PLS-DA vs XGBoost vs STRUCTURE**.
+- **결과**: 대륙 단위 **PLS-DA가 XGBoost보다 견고**(AUC≈1.0), **대륙-내 fine-scale 급락** → 상용 패널 fine-scale 분별 부적합.
+- **★ 우리와의 직접 연결**: (i) 단순/선형(PLS-DA) > 부스팅(XGBoost) = 우리 **RQ3·§24.4–24.5**와 같은 결, (ii) fine-scale 급락 = 근연 EAS 5집단 난도 독립 입증, (iii) 점추정 AUC 중심·CP/OSR 없음(우리 차별). 저자(Alladio·Cosenza·Pilli)가 §7-A Kinship NGS(ESA 2024)와 동일 이탈리아 그룹.
+
+> ESA 2025 *Predictive modeling of biogeographical ancestry…* (PII S0957417425032774)도 댓글에 재언급 → **이미 §7-A**에 정리(중복).
+
+### 10-D. 딥러닝 기반 집단구조 추론 (Notion §5.11.3)
+
+#### HaploNet — VAE 기반 haplotype/집단구조 추론 (Genome Research 2022) — §6 옵션10 상세화
+**제목**: *Haplotype and population structure inference using neural networks in whole-genome sequencing data* (Meisner & Albrechtsen)
+**URL**: https://genome.cshlp.org/content/32/8/1542 — Genome Research 32(8):1542
+- 가우시안 혼합 **VAE(변분 오토인코더)**로 phased haplotype 군집 학습 → 집단구조·admixture 추론. **1000G·UK Biobank**(비지도).
+- **차별점**: 비지도 VAE 구조추론(라벨 분류·신뢰층 아님) vs 우리 지도 fine-scale + CP/OSR. 단 1000G·DL 계보 인접. (§6 옵션10에 도구로만 기재됐던 것의 정식 서지.)
+
+#### ★ Transparent/Generalizable DL for genomic ancestry (bioRxiv 2025) — §27/RQ7 직접 인접
+**제목**: *A Transparent and Generalizable Deep Learning Framework for Genomic Ancestry Prediction*
+**URL**: https://www.biorxiv.org/content/10.1101/2025.08.26.672448v1
+- **Diet Network(DietNet)** 딥러닝으로 유전체 조상 예측, **일반화(다집단)·설명가능성(투명성)** 강조. CARTaGENE(몬트리올) biobank 등 다집단 일반화 평가.
+- **★ 차별점/연결**: 우리 **docs/04 §27 DietNet 임베딩(73.6%) · RQ7(일반화/전이)**과 직접 맞닿음. "일반화+투명성"은 우리 *신뢰성 축*과 같은 문제의식이나, 우리는 거기에 **분포-free conformal 보장 + open-set 거부**를 추가. (Romero 2017 ICLR DietNet[§8-A·§9-A]의 *ancestry 일반화 후속*에 해당 — 원전과 구분.)
