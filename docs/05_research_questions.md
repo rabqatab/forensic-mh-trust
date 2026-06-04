@@ -29,36 +29,53 @@
 
 ---
 
-## 2. 확정 RQ (계층)
+## 2. 확정 RQ (계층: 3 통합 spine ▸ 7 구성 sub-question)
 
-> 표기: **[ANSWERED]** = 실측으로 답함 / **[PENDING]** = 진행 중 / **[DEFERRED]** = Paper 2 또는 데이터 확장 후.
+> **논문(Paper 1)은 아래 3개 통합 RQ로 말한다** — 발견 → 방법 → 배치의 3막. §1 contribution bullet 3개와 1:1 대응.
+> 기존 7개(RQ1–7)는 **삭제하지 않고** 각 통합 RQ의 *구성 sub-question*(상세 근거·실측 로그 앵커)으로 보존한다 — RQ 앵커 규율·감사 추적 유지.
 
-### ★ RQ1 (Primary) — Open-set 신뢰도는 정확도가 아니라 base-model이 좌우하는가?
+### 논문 spine (3 통합 RQ)
+
+| 통합 RQ | 질문 (한 줄) | 구성 sub-question | 상태 |
+|---|---|---|---|
+| **★ RQ-Ⅰ (발견·핵심)** | fine-scale forensic ancestry의 *open-set 신뢰성*은 정확도/모델 복잡도가 아니라 **인코딩 + base-model**의 속성인가? | RQ1★(base-model이 OSR 좌우) · RQ3(인코딩 아티팩트, 단순 선형 우위) · RQ4(ECE ≠ OSR, 메커니즘) | **ANSWERED ★** |
+| **RQ-Ⅱ (방법 타당성)** | 분포-free conformal trust layer가 저분리 영역(≈57–80% 정확도)에서 **유효·실용 보장**(목표 coverage + 사용 가능 set/패널)을 주는가? | RQ2(coverage + set/패널 크기) | **ANSWERED** |
+| **RQ-Ⅲ (배치 현실성)** | 이 신뢰 파이프라인이 **forensic 배치 제약**을 견디는가? | RQ5(최소 배치 패널) · RQ6(열화 DNA/ADO) · RQ7(외부 코호트 HGDP 전이) | **ANSWERED** |
+
+**한 문장 기여(3막)**: fine-scale forensic ancestry의 open-set 신뢰성은 정확도가 아니라 *base-model·인코딩*의 속성이며(RQ-Ⅰ), 분포-free trust layer가 이를 저정확도에서도 유효 보장으로 전환하고(RQ-Ⅱ), 그 보장은 최소 패널·열화·코호트 이동에도 견딘다(RQ-Ⅲ).
+
+---
+
+### 구성 sub-question 상세 (7, 실측 근거)
+
+> 표기: **[ANSWERED]** = 실측으로 답함 / **[PENDING]** = 진행 중 / **[DEFERRED]** = Paper 2 또는 데이터 확장 후. 각 RQ 머리말의 `[▸ RQ-Ⅹ]`는 소속 통합 RQ.
+
+### ★ RQ1 (Primary) `[▸ RQ-Ⅰ]` — Open-set 신뢰도는 정확도가 아니라 base-model이 좌우하는가?
 
 - **질문**: 데이터·인코딩·split을 고정하고 base estimator만 바꿀 때, open-set 거부 성능(far-OOD AUROC, empty-set 거부, near-OOD/LOPO)은 분류 정확도가 아니라 base-model의 보정/선택에 의해 결정되는가?
 - **왜 중요**: 법과학 실무·ML 양쪽에 반직관적. "리더보드 1등 모델을 쓰라"는 통념을 뒤집고, 신뢰가 필요한 도메인의 모델 선택 기준을 바꾼다. `docs/03` 기준 forensic ancestry에 CP/OSR 적용 0편(Zhang 2025) — novelty 앵커.
 - **가설**: 더 잘 보정된 단순 base(one-hot LogReg)가 정확도와 OSR을 **동시에** 최고로 달성하고, gradient-boosted trees는 OOD에 과확신하여 OSR 최악.
 - **근거 [ANSWERED, 강함]**: §20(10-seed). LogReg far-OOD AUROC **0.840±0.016** vs XGBoost **0.675±0.038** → 격차 0.165 ≈ **~4σ**. empty-set 거부: LogReg 발화 / XGBoost 0.000±0.000. coverage는 세 base 모두 ≥0.90(보장은 base-무관). → **2단 메시지: 보장은 base-agnostic, 분리는 base가 좌우.**
 
-### RQ2 — 분포-free conformal이 저정확도에서도 목표 커버리지를 주는가? 패널 크기와 set은?
+### RQ2 `[▸ RQ-Ⅱ]` — 분포-free conformal이 저정확도에서도 목표 커버리지를 주는가? 패널 크기와 set은?
 
 - **질문**: 점추정 정확도가 낮아도(≈57–80%) Mondrian split-conformal이 1−α 커버리지를 보장하는가? prediction set은 마커 수에 따라 어떻게 좁아지는가?
 - **왜 중요**: trust layer의 타당성 근거. "신뢰구간 포함 출력"이라는 법정 가치 제안의 핵심.
 - **근거 [ANSWERED]**: §4.3/§21. coverage ≥0.90(α=0.10), α=0.05에서 보수적(~0.95+). set 크기는 마커↑로 축소(chr22 53마커 3.8 → genome-wide 3042 1.8 @α=0.1). → **정확도가 완벽하지 않아도 "5개 중 평균 1.8개 후보로 90% 보장".**
 
-### RQ3 (Enabling) — fine-scale "≈57% 천장"은 생물학적(FST) 한계인가 인코딩 아티팩트인가? 최적 표현은?
+### RQ3 (Enabling) `[▸ RQ-Ⅰ]` — fine-scale "≈57% 천장"은 생물학적(FST) 한계인가 인코딩 아티팩트인가? 최적 표현은?
 
 - **질문**: 오래 갇혀 있던 ≈57% 정확도 천장은 동아시아 fine-scale의 본질적 한계(낮은 FST)인가, 아니면 명목형 diplotype을 ordinal로 인코딩한 아티팩트인가? 정확도와 신뢰를 동시에 최대화하는 표현은?
 - **왜 중요**: 핵심 enabler이자 독립적 "simplicity result". 천장이 아티팩트면 제안서의 비관적 정확도 목표 해석 자체가 바뀐다.
 - **근거 [ANSWERED]**: §13/부록 A. one-hot(no scaler)+LogReg **79.6%** vs ordinal-tree ≈57% → **아티팩트**. StandardScaler-on-one-hot은 선형/커널 모델을 붕괴(46.6%). PCA/SVD 피처도 무익(§4.7). **DL 5계열(MLP·CNN·embedding·autoencoder·transformer)도 전부 LogReg에 ≥25p 짐**(§24) — 단순함이 DL 전반에 우위. **선형 *클래스* 우위 확정**(distinct 결정규칙 6종 전부 73–82%: MultinomialNB 82.2 최고정확도·Passive-Aggressive/LinearSVC OSR 0.96 최고·Ridge·Perceptron·Nearest-Centroid; LogReg 79.6 — §24.4). 단 **비정규화 LDA는 p≫n 공분산으로 적용 불가** → "선형 우위 = *정규화* 선형". **트리 열세는 *모델 클래스***(native-categorical HGBDT도 59.5% — 인코딩 무관, §24.5); **tabular-DL SOTA(FT-Transformer/TabNet)·small-data SOTA(TabPFN)도 전부 dense 선형에 짐**(§24.5 capstone). → **권장 recipe: one-hot, no scaler, dense regularized linear.**
 
-### RQ4 — 보정(ECE)과 open-set 분리(AUROC)는 같은 축인가?
+### RQ4 `[▸ RQ-Ⅰ]` — 보정(ECE)과 open-set 분리(AUROC)는 같은 축인가?
 
 - **질문**: confidence calibration(ECE)이 좋은 모델이 곧 OOD를 잘 분리하는가? deep-ensemble의 epistemic UQ가 OOD를 잡는가?
 - **왜 중요**: "왜 ensemble epistemic UQ가 아니라 conformal에 trust layer를 앵커하는가"의 근거. RQ1의 메커니즘 해명.
 - **근거 [ANSWERED]**: §4.4. 두 축 분리 — XGBoost ECE 최고(0.077)인데 OSR 최악(AUROC 0.695); deep-ensemble은 보정 좋아도 epistemic MI의 OOD AUROC≈0.36(<chance). → **ECE ≠ OSR. conformal coverage는 어느 쪽이든 유지되므로 trust layer를 거기에 앵커.**
 
-### RQ5 (Scope) — forensic 배치 가능한 최소 MH 패널이 존재하는가?
+### RQ5 (Scope) `[▸ RQ-Ⅲ]` — forensic 배치 가능한 최소 MH 패널이 존재하는가?
 
 - **질문**: 소수 마커 패널로 (i) 충분한 5집단 정확도, 또는 (ii) 충분한 trust(conformal coverage + 좁은 set + far-OOD 분리)를 **forensic 배치 규모(NGS ~50–200마커)**에서 달성할 수 있는가?
 - **왜 중요**: 제안서 중심 deliverable. forensic 메시지를 "minimal panel" ↔ "genome-wide MH"로 가른다.
@@ -68,13 +85,13 @@
   - **rescue (trust, §23.2)**: leakage-free 3-way split에서 **conformal coverage가 모든 패널 크기에서 ≥0.93 유지** — 25마커도 valid 90%+ coverage. trade-off는 set size(3.9→2.7)·far-OOD AUROC(0.59→0.76). **minimum forensic panel = 운영 스펙별 최소 N**(valid coverage면 25–50; set ≲3·AUROC ≥0.70이면 ~200–300, 10–15× 축소). 고정 배치 패널(top-50/100/200 마커 리스트) 산출.
   - **정직한 한계**: 원안의 "소수 마커 ≥90% 정확도"는 도달 불가(전체 패널도 79.6%); 충족된 것은 **trustworthy 최소 패널**(coverage 보장 + 운영점).
 
-### RQ6 (Robustness) — conformal 보장은 법과학적 열화(allele dropout)에서 살아남는가?
+### RQ6 (Robustness) `[▸ RQ-Ⅲ]` — conformal 보장은 법과학적 열화(allele dropout)에서 살아남는가?
 
 - **질문**: clean 학습 후 degraded DNA(ADO)로 테스트할 때 커버리지 보장이 유지되는가, 얼마나 graceful한가?
 - **왜 중요**: 경쟁 연구가 노출하지 않는 forensic-realism 한계. exchangeability 가정의 실제 취약점.
 - **근거 [ANSWERED]**: §4.5. graceful하지만 측정 가능한 열화 — ADO 50%에서 coverage 0.91→0.80(exchangeability 위반으로 보장 자체가 약화). → degradation-aware calibration이 future work.
 
-### RQ7 (Generalization) — 모델+trust layer가 독립 코호트(HGDP)로 전이되는가?
+### RQ7 (Generalization) `[▸ RQ-Ⅲ]` — 모델+trust layer가 독립 코호트(HGDP)로 전이되는가?
 
 - **질문**: 1000G(hg19) 학습 모델이 HGDP WGS(hg38) 중첩 집단(Han↔CHB+CHS, Japanese↔JPT, Dai↔CDX)으로 전이되는가? build 조화(hg19↔hg38) 품질은?
 - **왜 중요**: 단일 코호트 일반화의 honest 검증. 외부 타당성.
@@ -93,15 +110,15 @@
 
 ## 4. RQ ↔ 증거 매핑 (상태 요약)
 
-| RQ | 핵심 주장 | 근거(docs/04) | 상태 |
-|---|---|---|---|
-| **RQ1** | open-set 신뢰도는 base-model이 좌우(정확도 아님) | §20(4σ), §4.3 | **ANSWERED ★** |
-| RQ2 | conformal이 저정확도에서도 목표 커버리지 | §4.3, §21 | ANSWERED |
-| RQ3 | 57% 천장은 인코딩 아티팩트; one-hot LogReg 79.6% | §13, 부록 A | ANSWERED |
-| RQ4 | ECE ≠ OSR 분리 | §4.4 | ANSWERED |
-| RQ5 | 배치 가능 최소 forensic 패널 존재 (정확도–trust frontier; 10–15× 축소) | §23 | ANSWERED(재정의) |
-| RQ6 | conformal 보장이 ADO에서 graceful 열화 | §4.5 | ANSWERED |
-| RQ7 | HGDP 외부 코호트 전이 (in-callset 87.3%, clean hg38) | §22 | ANSWERED |
+| 통합 RQ | sub-RQ | 핵심 주장 | 근거(docs/04) | 상태 |
+|---|---|---|---|---|
+| **★ RQ-Ⅰ (발견)** | **RQ1** | open-set 신뢰도는 base-model이 좌우(정확도 아님) | §20(4σ), §4.3 | **ANSWERED ★** |
+| ★ RQ-Ⅰ | RQ3 | 57% 천장은 인코딩 아티팩트; one-hot LogReg 79.6% (선형 클래스 우위) | §13, §24, 부록 A | ANSWERED |
+| ★ RQ-Ⅰ | RQ4 | ECE ≠ OSR 분리 (메커니즘) | §4.4 | ANSWERED |
+| **RQ-Ⅱ (방법)** | RQ2 | conformal이 저정확도에서도 목표 커버리지 + set/패널 크기 | §4.3, §21 | ANSWERED |
+| **RQ-Ⅲ (배치)** | RQ5 | 배치 가능 최소 forensic 패널 존재 (정확도–trust frontier; 10–15× 축소) | §23 | ANSWERED(재정의) |
+| RQ-Ⅲ | RQ6 | conformal 보장이 ADO에서 graceful 열화 | §4.5 | ANSWERED |
+| RQ-Ⅲ | RQ7 | HGDP 외부 코호트 전이 (in-callset 87.3%, clean hg38) | §22 | ANSWERED |
 
 ---
 
