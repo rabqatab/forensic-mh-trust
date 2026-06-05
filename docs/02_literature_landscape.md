@@ -408,6 +408,11 @@ Ancestry용 표준 informativeness measure는:
 **경쟁/참조 — forensic ancestry ML (검증완료 2026-06-04 — docs/08):**
 - Heinzel, Purucker, Hutter, Pfaffelhuber 2025 *Advancing biogeographical ancestry predictions through ML*, FSI:G 79:103290 (doi:10.1016/j.fsigen.2025.103290) — **가장 유사**(TabPFN 벤치, log-loss 보고; CP/OSR 없음).
 - Wang C. et al. 2025 *A biogeographical ancestry inference pipeline using PCA-XGBoost…Asian populations*, FSI:G 77:103239 (doi:10.1016/j.fsigen.2025.103239) — 고정확도 광역 Asian(CP/OSR 없음).
+
+**MH 패널 선택 / informativeness (검증완료 2026-06-04 — §4.7 minimal-panel 앵커):**
+- de Barros Rodrigues et al. 2025 *Large-scale selection of highly informative microhaplotypes for ancestry inference and population specific informativeness*, FSI:G 74:103153 (doi:10.1016/j.fsigen.2024.103153) — **§4.7 직결**(그들=정확도 informativeness, 우리=trust frontier 추가).
+- Cai et al. 2024 *Systematic analyses of AISNPs screening and classification algorithms…forensic biogeographic ancestry*, FSI 357:111975 (doi:10.1016/j.forsciint.2024.111975).
+- Podini et al. 2026 *Defining key criteria for microhaplotype locus selection in forensic genetics (MH Working Group)*, FSI:G 83:103421 (doi:10.1016/j.fsigen.2026.103421) — Snipper=Phillips et al. 2007 FSI:G 1:273–280 (doi:10.1016/j.fsigen.2007.06.008).
 > niche 확인: forensic DNA 전체에 conformal/OSR 적용 **0편**(검색 2026-06-04) → "first conformal+OSR for forensic ancestry" 성립(정밀 scope). 상세 docs/08.
 
 > Paper 1 §References 인용은 모두 CrossRef/arXiv/publisher로 **프로그램적 검증 완료**(DOI 확보, 2026-06-04).

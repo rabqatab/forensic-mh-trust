@@ -28,7 +28,7 @@
 | **Barash et al. 2024**, FSI:G 69:102994 (doi:10.1016/j.fsigen.2023.102994) | ML critical review | n/a | "community ML 인식 부족" 명시 | ML 채택 갭 인용 |
 | **Marsico & Amigo 2025**, FSI:G 76:103225 (doi:10.1016/j.fsigen.2025.103225) | AI trust/robustness/adversarial | n/a | trust를 *open problem*으로 제기, 방법 미제시 | "trust를 문제로 제기했으나 *우리가 방법을 준다*" |
 
-> 미검증(제출 전 DOI 확인): FSI:G MH-selection S1872-4973(24)00149-2 · FSI AISNP S0379-0738(24)00056-2 · MH Working Group locus-criteria FSI:G 2026 S1872-4973(26)00002-5.
+> ✅ 검증완료(2026-06-04, CrossRef PII 왕복): de Barros Rodrigues et al. 2025 *Large-scale selection of highly informative MH for ancestry inference*, FSI:G 74:103153 (doi:10.1016/j.fsigen.2024.103153) — §4.7 직결 · Cai et al. 2024 *Systematic AISNPs screening/classification*, FSI 357:111975 (doi:10.1016/j.forsciint.2024.111975) · Podini et al. 2026 *Defining key criteria for MH locus selection (MH Working Group)*, FSI:G 83:103421 (doi:10.1016/j.fsigen.2026.103421).
 
 ## 3. ★ 3대 선제대응 (forensic 리뷰어 1순위 반박 — 필수)
 
@@ -70,8 +70,10 @@
 - [x] 신규 검증 citation을 docs/02 + Paper1 §References에 반영 (Ramos 2013·Hannig&Iyer 2022·Heinzel 2025·Wang 2025·Marsico 2025·Barash 2024)
 - [x] first-mover 문장 정밀 scope("first conformal+OSR for forensic ancestry") — Intro §1 명시 + LR-calibration 계보(Ramos 2013·Hannig&Iyer 2022) 인정
 - [x] §4.7 minimal panel 작성 (docs/04 §23 → 본문화: 정확도 곡선 + trust frontier 표, coverage ≥0.93 전 구간, 10–15× 축소) — **RQ-Ⅲ 본문 완결**
-- [~] Snipper = **Phillips et al. 2007** FSI:G 1:273 DOI 확정 — 검증 진행 중(subagent)
-- [~] 미검증 3건(FSI PII) DOI 확정 — 검증 진행 중(subagent)
+- [x] Snipper = **Phillips et al. 2007** FSI:G 1:273–280 (doi:10.1016/j.fsigen.2007.06.008) 확정 — Paper §References 반영
+- [x] FSI PII 3건 DOI 확정(de Barros Rodrigues 2025·Cai 2024·Podini 2026) — Paper §References + docs/02 반영
+
+**→ FSI:G 재앵커 체크리스트 전 항목 완료. 잔여 = §4.7 외 본문 미세조정·실제 저널 포맷팅(투고 시).**
 
 ## 7. 신규 검증 citation (추가 대상, DOI 확보)
 
