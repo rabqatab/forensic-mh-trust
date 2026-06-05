@@ -36,9 +36,9 @@
 
 | # | 선제대응 | 현 상태 | 할 일 |
 |---|---|---|---|
-| **(a)** coverage ↔ **LR calibration 연결** | (B) 단락에 반영 | LR-calibration 계보 인용: **Ramos & González-Rodríguez 2013** FSI 230:156 (doi:10.1016/j.forsciint.2013.04.014) · **Hannig & Iyer 2022** JRSS-A 185(1):267 (doi:10.1111/rssa.12747). "scalar LR calibration ↔ set coverage" 보완 관계 명시 |
-| **(b)** **per-population(class-conditional) coverage 보고** | **유리** — 우리 method가 이미 **Mondrian(per-class)** | §4.2에 **집단별 coverage 표**(marginal만이 아니라 5집단 각각 ≥1−α) 추가 → subgroup under-coverage 우려를 *설계상* 흡수. (B)에 논지 반영 완료 |
-| **(c)** **validation-guideline 적합성** | 미반영 | Discussion에 SWGDAM/ISFG developmental-validation 관점 1단락: conformal layer가 기존 validation 워크플로에 어떻게 얹히는가(재현성·문서화·운영점) |
+| **(a)** coverage ↔ **LR calibration 연결** | ✅ **완료** (Paper §2 + §6) | LR-calibration 계보 인용: **Ramos & González-Rodríguez 2013** FSI 230:156 (doi:10.1016/j.forsciint.2013.04.014) · **Hannig & Iyer 2022** JRSS-A 185(1):267 (doi:10.1111/rssa.12747). "scalar LR calibration ↔ set coverage" 보완 명시 |
+| **(b)** **per-population(class-conditional) coverage 보고** | ✅ **완료·실측** (Paper §4.2, `scripts/trust/53`, 10-seed) | **반전 발견**: "Mondrian이니 설계상 보장"은 *틀림* — **권장 LogReg는 모든 집단 target 충족**(α=0.1: KHV 0.90; α=0.05: KHV 0.96)이나 **XGBoost는 marginal 0.888인데 KHV 0.70 붕괴**. → per-pop 신뢰성은 *base-model 의존* = **RQ-Ⅰ 재입증**. 정직하게 "marginal이 숨기는 subgroup 실패를 *드러내고*, 단순·보정 모델에서만 per-pop이 성립"으로 프레임 |
+| **(c)** **validation-guideline 적합성** | ✅ **완료** (Paper §6) | 신설 "Forensic deployment and validation" §6: (i) LR 관계 (ii) SWGDAM/ISFG developmental·internal validation 적합(thin wrapper·α만 파라미터·per-pop coverage를 필수 readout으로 권고) (iii) reference-DB 전제 → investigative-lead 한정 |
 
 → 셋을 선제하면 "ML paper wearing forensic clothing" 인상을 차단. 안 하면 desk-level 회의론.
 
@@ -64,12 +64,12 @@
 ## 6. 제출 전 체크리스트 (FSI:G)
 
 - [x] LR-vs-conformal Related Work 단락 (B, paperwork/Paper1_draft §2)
-- [ ] §4.2에 **집단별(Mondrian) coverage 표** 추가 — (b) 증거
-- [ ] Discussion에 **SWGDAM/ISFG validation 적합성** 1단락 — (c)
-- [ ] Abstract/Title forensic 재앵커 (§4)
-- [ ] first-mover 문장 정밀 scope("first conformal+OSR for forensic ancestry") + LR-calibration 계보 인용
+- [x] §4.2에 **집단별(Mondrian) coverage 표** 추가 — (b) 증거 (10-seed 실측, `scripts/trust/53`)
+- [x] **SWGDAM/ISFG validation 적합성** — Paper 신설 §6 (c)
+- [x] Abstract forensic 재앵커 (per-pop + 외부코호트 + LR-보완) — Title은 이미 forensic-anchored 유지
+- [x] 신규 검증 citation을 docs/02 + Paper1 §References에 반영 (Ramos 2013·Hannig&Iyer 2022·Heinzel 2025·Wang 2025·Marsico 2025·Barash 2024)
+- [ ] first-mover 문장 정밀 scope("first conformal+OSR for forensic ancestry") — Intro에 명시 (현재 §2가 "absent"만 언급)
 - [ ] §4.7 minimal panel 작성 (docs/04 §23 → RQ-Ⅲ 완결, future-work 보류 중)
-- [ ] 신규 검증 citation을 docs/02 + Paper1 §References에 반영 (Ramos 2013·Hannig&Iyer 2022·Heinzel 2025·Wang 2025·Marsico 2025)
 - [ ] Snipper = **Phillips et al. 2007** FSI:G 1:273 DOI 확정(현 [verify])
 - [ ] 미검증 4건 DOI 확정(§2 각주)
 

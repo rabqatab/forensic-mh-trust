@@ -64,6 +64,17 @@ genome-wide (3,042마커):
 
 → ✅ coverage가 1−α 추종, **marker↑ → set tighter**(chr22 53마커 α=0.1 set 3.79 → 3,042마커 2.61).
 
+### 3.1 Per-population (class-conditional) coverage — base-model 의존 발견  `[→ RQ2·RQ1 · FSI:G (b)]`
+`scripts/trust/53_perpop_coverage.py`(LogReg, 10-seed) + `coverage_curve.json`(XGBoost, 위 표 per_class). **forensic은 per-population 신뢰성 요구** → marginal만으론 부족.
+
+| α (target) | base | marginal | set | CDX | CHB | CHS | JPT | **KHV** |
+|---|---|---|---|---|---|---|---|---|
+| 0.10 (0.90) | **LogReg**(권장, 10-seed) | 0.916 | 1.72 | 0.95 | 0.90 | 0.93 | 0.90 | **0.90** |
+| 0.10 (0.90) | XGBoost(single split) | 0.888 | 2.61 | 1.00 | 0.84 | 0.97 | 0.94 | **0.70** |
+| 0.05 (0.95) | **LogReg**(10-seed) | 0.957 | 2.06 | 0.97 | 0.94 | 0.96 | 0.95 | **0.96** |
+
+**발견**: 권장 **LogReg는 α=0.1·0.05에서 모든 집단 target 충족**(KHV 포함). 반면 **XGBoost는 marginal이 비슷(0.888)한데도 KHV 0.70으로 subgroup 붕괴**(CHB 0.84도 미달) — marginal이 숨김. → **per-population coverage 자체가 base-model 의존 = RQ1 재입증**. 정직한 forensic 메시지: "marginal 평균이 가리는 subgroup 실패를 *드러내고*, calibrated 단순 모델에서만 per-pop이 성립". (주의: α=0.2에선 LogReg marginal도 0.786으로 소폭 미달 — 소표본 유한표본 noise; α=0.1·0.05이 운영 권장점.)
+
 ## 4. Exp 4 — Open-set far-OOD (Plan 2, XGBoost base)  `[→ RQ1 · superseded by §20]`
 - OOD unseen-diplotype fraction **0.132**; **MSP AUROC 0.695**, FPR@95TPR 0.75; empty-set reject **0**(모든 α).
 - marker별 AUROC 추이: 53마커 0.50 → 1,058 0.67 → 3,042 **0.695**(포화).

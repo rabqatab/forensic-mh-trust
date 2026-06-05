@@ -399,6 +399,17 @@ Ancestry용 표준 informativeness measure는:
 - Vovk, Gammerman & Shafer *Algorithmic Learning in a Random World*, Springer 1st ed. 2005 (doi:10.1007/b106715)·2nd ed. 2022 (doi:10.1007/978-3-031-06649-8); Angelopoulos & Bates 2023 *Conformal Prediction: A Gentle Introduction*, FnT ML 16(4):494–591 (arXiv:2107.07511) — split/Mondrian CP 근거. **[검증완료]**
 - Papangelou et al. (2025) Frontiers Bioinf 5:1507448 (doi:10.3389/fbinf.2025.1507448) — CP-in-genomic-medicine(forensic 미적용, 6부 기재). **[검증완료; 이전 "Olsson et al. 2025" 오귀속 교정]**
 - Geng, Huang & Chen 2021 *Recent Advances in Open Set Recognition: A Survey*, IEEE TPAMI 43(10):3614–3631 (doi:10.1109/TPAMI.2020.2981604); Yang, Zhou, Li & Liu 2024 *Generalized OOD Detection: A Survey*, IJCV 132:5635–5662 (doi:10.1007/s11263-024-02117-4) — open-set/OOD 서베이(6부 기재). **[검증완료]**
+
+**Forensic reliability / LR-calibration 계보 (FSI:G 재앵커용, 검증완료 2026-06-04 — docs/08):**
+- Ramos & González-Rodríguez 2013 *Reliable support: measuring calibration of likelihood ratios*, FSI 230(1–3):156 (doi:10.1016/j.forsciint.2013.04.014) — LR calibration 측정(우리 coverage의 forensic 보완 대상).
+- Hannig & Iyer 2022 *Testing for calibration discrepancy of reported likelihood ratios in forensic science*, JRSS-A 185(1):267 (doi:10.1111/rssa.12747) — 보고된 LR의 calibration 검정.
+- Marsico & Amigo 2025 *Ethical and security challenges in AI for forensic genetics*, FSI:G 76:103225 (doi:10.1016/j.fsigen.2025.103225) — AI trust를 *open problem*으로 제기(방법 미제시 → 우리가 방법 제공).
+
+**경쟁/참조 — forensic ancestry ML (검증완료 2026-06-04 — docs/08):**
+- Heinzel, Purucker, Hutter, Pfaffelhuber 2025 *Advancing biogeographical ancestry predictions through ML*, FSI:G 79:103290 (doi:10.1016/j.fsigen.2025.103290) — **가장 유사**(TabPFN 벤치, log-loss 보고; CP/OSR 없음).
+- Wang C. et al. 2025 *A biogeographical ancestry inference pipeline using PCA-XGBoost…Asian populations*, FSI:G 77:103239 (doi:10.1016/j.fsigen.2025.103239) — 고정확도 광역 Asian(CP/OSR 없음).
+> niche 확인: forensic DNA 전체에 conformal/OSR 적용 **0편**(검색 2026-06-04) → "first conformal+OSR for forensic ancestry" 성립(정밀 scope). 상세 docs/08.
+
 > Paper 1 §References 인용은 모두 CrossRef/arXiv/publisher로 **프로그램적 검증 완료**(DOI 확보, 2026-06-04).
 
 ### 8-E. LexiconArxiv ML-method 선행연구 (arxiv-verified, 2026-05-30)
