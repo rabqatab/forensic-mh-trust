@@ -68,10 +68,10 @@
 - [x] **SWGDAM/ISFG validation 적합성** — Paper 신설 §6 (c)
 - [x] Abstract forensic 재앵커 (per-pop + 외부코호트 + LR-보완) — Title은 이미 forensic-anchored 유지
 - [x] 신규 검증 citation을 docs/02 + Paper1 §References에 반영 (Ramos 2013·Hannig&Iyer 2022·Heinzel 2025·Wang 2025·Marsico 2025·Barash 2024)
-- [ ] first-mover 문장 정밀 scope("first conformal+OSR for forensic ancestry") — Intro에 명시 (현재 §2가 "absent"만 언급)
-- [ ] §4.7 minimal panel 작성 (docs/04 §23 → RQ-Ⅲ 완결, future-work 보류 중)
-- [ ] Snipper = **Phillips et al. 2007** FSI:G 1:273 DOI 확정(현 [verify])
-- [ ] 미검증 4건 DOI 확정(§2 각주)
+- [x] first-mover 문장 정밀 scope("first conformal+OSR for forensic ancestry") — Intro §1 명시 + LR-calibration 계보(Ramos 2013·Hannig&Iyer 2022) 인정
+- [x] §4.7 minimal panel 작성 (docs/04 §23 → 본문화: 정확도 곡선 + trust frontier 표, coverage ≥0.93 전 구간, 10–15× 축소) — **RQ-Ⅲ 본문 완결**
+- [~] Snipper = **Phillips et al. 2007** FSI:G 1:273 DOI 확정 — 검증 진행 중(subagent)
+- [~] 미검증 3건(FSI PII) DOI 확정 — 검증 진행 중(subagent)
 
 ## 7. 신규 검증 citation (추가 대상, DOI 확보)
 
