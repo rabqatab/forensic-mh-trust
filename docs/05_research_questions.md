@@ -38,7 +38,7 @@
 
 | 통합 RQ | 질문 (한 줄) | 구성 sub-question | 상태 |
 |---|---|---|---|
-| **★ RQ-Ⅰ (발견·핵심)** | fine-scale forensic ancestry의 *open-set 신뢰성*은 정확도/모델 복잡도가 아니라 **인코딩 + base-model**의 속성인가? | RQ1★(base-model이 OSR 좌우) · RQ3(인코딩 아티팩트, 단순 선형 우위) · RQ4(ECE ≠ OSR, 메커니즘) | **ANSWERED ★** |
+| **★ RQ-Ⅰ (발견·핵심)** | fine-scale forensic ancestry의 *open-set 신뢰성*은 정확도/모델 복잡도가 아니라 **base-model**의 속성인가? | RQ1★(base-model이 OSR 좌우) · RQ3(*내부 enabler*: simplicity result — 정규화 선형 > 전체 복잡도 사다리, FST-한계 아님; 인코딩 post-mortem은 부록만) · RQ4(ECE ≠ OSR, 메커니즘) | **ANSWERED ★** |
 | **RQ-Ⅱ (방법 타당성)** | 분포-free conformal trust layer가 저분리 영역(≈57–80% 정확도)에서 **유효·실용 보장**(목표 coverage + 사용 가능 set/패널)을 주는가? | RQ2(coverage + set/패널 크기) | **ANSWERED** |
 | **RQ-Ⅲ (배치 현실성)** | 이 신뢰 파이프라인이 **forensic 배치 제약**을 견디는가? | RQ5(최소 배치 패널) · RQ6(열화 DNA/ADO) · RQ7(외부 코호트 HGDP 전이) | **ANSWERED** |
 
@@ -63,10 +63,14 @@
 - **왜 중요**: trust layer의 타당성 근거. "신뢰구간 포함 출력"이라는 법정 가치 제안의 핵심.
 - **근거 [ANSWERED]**: §4.3/§21. coverage ≥0.90(α=0.10), α=0.05에서 보수적(~0.95+). set 크기는 마커↑로 축소(chr22 53마커 3.8 → genome-wide 3042 1.8 @α=0.1). → **정확도가 완벽하지 않아도 "5개 중 평균 1.8개 후보로 90% 보장".**
 
-### RQ3 (Enabling) `[▸ RQ-Ⅰ]` — fine-scale "≈57% 천장"은 생물학적(FST) 한계인가 인코딩 아티팩트인가? 최적 표현은?
+### RQ3 (내부 modeling enabler — 독립 논문 RQ 아님) `[▸ RQ-Ⅰ]` — fine-scale "≈57% 천장"은 생물학적(FST) 한계인가 인코딩 아티팩트인가? 최적 표현은?
 
-- **질문**: 오래 갇혀 있던 ≈57% 정확도 천장은 동아시아 fine-scale의 본질적 한계(낮은 FST)인가, 아니면 명목형 diplotype을 ordinal로 인코딩한 아티팩트인가? 정확도와 신뢰를 동시에 최대화하는 표현은?
-- **왜 중요**: 핵심 enabler이자 독립적 "simplicity result". 천장이 아티팩트면 제안서의 비관적 정확도 목표 해석 자체가 바뀐다.
+> **⚠ 위상 주의 (2026-06-10)**: RQ3는 **독립 논문 RQ가 아니다**. "57% 천장 = 우리 초기 파이프라인 아티팩트"는 *우리 자신의 디버깅 서사*(학계 보고 천장 아님)이고, "명목형엔 one-hot"은 교과서 지식 → 기여로 못 실음. **논문 표면화 = 두 갈래로 분리**:
+> - **(발표 가능, §4.1 supporting)** *simplicity result* — 정규화 선형이 트리·DL·tabular-SOTA·TabPFN를 *전부* 이김(p≫n 명목형) + **fine-scale EAS가 FST-한계가 아님**(생물학이 아니라 모델클래스가 제약). RQ-Ⅰ의 "신뢰를 정확도와 안 바꾼다" 뒷받침.
+> - **(Appendix-only)** 인코딩 함정 post-mortem(ordinal·StandardScaler-on-one-hot)·"57% 천장" 서사 = **재현성 위생**, 헤드라인/RQ 아님. → 부록 A.
+
+- **질문(내부)**: ≈57% 천장은 동아시아 fine-scale의 본질적 한계(낮은 FST)인가, 명목형 diplotype을 ordinal로 인코딩한 아티팩트인가? 정확도와 신뢰를 동시에 최대화하는 표현은?
+- **왜 중요(내부)**: 핵심 enabler. 단 *논문 기여*는 아래 simplicity-result 성분뿐 — "천장을 깼다"는 자기참조 프레이밍은 금지(Paper §4.1은 "FST-한계 아님 + simplicity result"로 재프레임됨, 2026-06-10).
 - **근거 [ANSWERED]**: §13/부록 A. one-hot(no scaler)+LogReg **79.6%** vs ordinal-tree ≈57% → **아티팩트**. StandardScaler-on-one-hot은 선형/커널 모델을 붕괴(46.6%). PCA/SVD 피처도 무익(§4.7). **DL 5계열(MLP·CNN·embedding·autoencoder·transformer)도 전부 LogReg에 ≥25p 짐**(§24) — 단순함이 DL 전반에 우위. **선형 *클래스* 우위 확정**(distinct 결정규칙 6종 전부 73–82%: MultinomialNB 82.2 최고정확도·Passive-Aggressive/LinearSVC OSR 0.96 최고·Ridge·Perceptron·Nearest-Centroid; LogReg 79.6 — §24.4). 단 **비정규화 LDA는 p≫n 공분산으로 적용 불가** → "선형 우위 = *정규화* 선형". **트리 열세는 *모델 클래스***(native-categorical HGBDT도 59.5% — 인코딩 무관, §24.5); **tabular-DL SOTA(FT-Transformer/TabNet)·small-data SOTA(TabPFN)도 전부 dense 선형에 짐**(§24.5 capstone). → **권장 recipe: one-hot, no scaler, dense regularized linear.**
 
 ### RQ4 `[▸ RQ-Ⅰ]` — 보정(ECE)과 open-set 분리(AUROC)는 같은 축인가?
@@ -113,7 +117,7 @@
 | 통합 RQ | sub-RQ | 핵심 주장 | 근거(docs/04) | 상태 |
 |---|---|---|---|---|
 | **★ RQ-Ⅰ (발견)** | **RQ1** | open-set 신뢰도는 base-model이 좌우(정확도 아님) | §20(4σ), §4.3 | **ANSWERED ★** |
-| ★ RQ-Ⅰ | RQ3 | 57% 천장은 인코딩 아티팩트; one-hot LogReg 79.6% (선형 클래스 우위) | §13, §24, 부록 A | ANSWERED |
+| ★ RQ-Ⅰ | RQ3 *(내부 enabler)* | simplicity result: 정규화 선형(79.6%) > 트리·DL·tabular-SOTA·TabPFN, fine-scale EAS는 FST-한계 아님 (인코딩 post-mortem = 부록만, 독립 RQ 아님) | §13, §24, 부록 A | ANSWERED |
 | ★ RQ-Ⅰ | RQ4 | ECE ≠ OSR 분리 (메커니즘) | §4.4 | ANSWERED |
 | **RQ-Ⅱ (방법)** | RQ2 | conformal이 저정확도에서도 목표 커버리지 + set/패널 크기 | §4.3, §21 | ANSWERED |
 | **RQ-Ⅲ (배치)** | RQ5 | 배치 가능 최소 forensic 패널 존재 (정확도–trust frontier; 10–15× 축소) | §23 | ANSWERED(재정의) |
