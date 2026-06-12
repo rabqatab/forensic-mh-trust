@@ -14,8 +14,8 @@
 - 신뢰: 분산 = open-set 점수(내재).
 
 ## 3. 무엇이 new (3)
-1. **p≫n 표현학습의 해법 = random-effects 수축** (James–Stein deep 아날로그) — 과적합 실패를 near-linear 성공으로(§27).
-2. **Variance-as-nonconformity**: 학습된 per-marker posterior 분산이 곧 open-set/conformal 점수 — 불확실성이 표현에 *내재*(MSP/앙상블 epistemic은 OOD와 decouple, RQ4 §14).
+1. **p≫n 표현학습의 해법 = random-effects 수축** (James–Stein deep 아날로그) — 과적합 실패를 near-linear 성공으로(§27, *정확도* 축).
+2. **Variance-as-nonconformity**: 학습된 per-code posterior 분산이 곧 open-set/conformal 점수 — 불확실성이 표현에 *내재*(MSP/앙상블 epistemic은 OOD와 decouple, RQ4 §14). **메커니즘(실측 교정, §27.2)**: 이 OOD 신호는 *random-effects 수축(KL)이 아니라* **변분 학습 자체**에서 나온다 — reparameterization noise 하 CE loss가 자주·판별적인 코드의 분산을 누르고 드문 코드는 prior 근처에 남겨 *빈도-친숙도 gradient*(Spearman(freq, logvar) = −0.99)를 만든다. KL 수축은 *marginal 증폭*(near-OOD 0.772@KL=0 → 0.792@KL=2)일 뿐 원인이 아니다.
 3. **Feature-localized abstention**: 분산이 marker별 → "marker X가 낯설어 불확실"을 *감사 가능*하게. LogReg/MSP 불가.
 
 ## 4. 검증 실험
@@ -35,11 +35,12 @@
 - Venue: NeurIPS/ICLR(trustworthy ML·UQ·representation) 또는 AISTATS(EB–conformal 이론); 응용은 forensic/genomics venue.
 
 ## 7. 2주 pilot — **결과 (2026-05-31)**
-- **★(d) variance-as-nonconformity = POSITIVE**: 변분 random-effects 분산 점수 open-set **AUROC 0.946 ± 0.010** vs 같은 모델 MSP 0.676 → 내재 분산이 MSP를 압도, LinearSVC(0.957) 근접. **CREE 핵심 capability 성립**(§27.1).
+- **★(d) variance-as-nonconformity = POSITIVE**: 변분 분산 점수 far-OOD open-set **AUROC 0.946 ± 0.010** vs 같은 모델 MSP 0.676 → 내재 분산이 MSP를 압도, LinearSVC(0.957) 근접. **CREE 핵심 capability 성립**(§27.1).
+- **★(g) near-OOD = POSITIVE (최대 난제에서 유일 작동 레버, §27.2)**: KOR-proxy(15개 미수록 HGDP-EAS 집단)에서 변분 분산 **near-OOD AUROC 0.782 ± 0.005** — MSP(0.670)·거리(Mahalanobis/kNN 0.69)·set-size(0.48)를 8–11p 압도, **모든 점수 중 최고·최안정**. 난이도 gradient 확인(far 1.0 → near 0.78). 메커니즘 검증(§27.2): KL 무관(KL=0도 0.772)·OTHER 무관(제외해도 0.78–0.80) → *변분 학습된 코드별 친숙도*가 원천. *단 0.78은 moderate — near-OOD는 완화 가능 한계지 해결 아님.*
 - **(b) coverage = POSITIVE**: conformal coverage 0.920 유지(embedding-DL에서도 model-agnostic).
 - **(e) 극소표본 = NEGATIVE**: RandEff가 n=50–full 전 구간 LogReg에 −8~10p. shrinkage embedding은 소표본 정확도 이점 없음.
 - **(c) SSL+random-effects = NEGATIVE**: gnomAD 4091 사전학습 후 acc **52.7 ± 3.5%**(far-OOD AUROC 0.632) — naive SSL 54.0·supervised 55.4와 동일. 수축을 *deep* SSL transformer에 붙여도 SSL 한계(§25) 못 넘음. 대비: 같은 수축이 *얕은* RandEff(72.6%)에선 +43p → **정규화 이득은 지배적 inductive bias일 때만** 발현(transformer attention의 별도 과적합이 묻음).
 
 - **★(f) cross-cohort transfer = POSITIVE**: 1KG-EAS5 학습 VRE를 HGDP(미관측 코호트, 18 novel EA 집단)로 zero-shot. cross-cohort open-set **var 0.999 vs MSP 0.633**; MSP는 코호트 경계에서 0.721→0.633 −0.09 붕괴, 분산은 1.000→0.999 유지 → *intrinsic uncertainty는 cohort-shift에 강건*. 메커니즘 검증: 무학습 OTHER-fraction AUROC=0.002/0.063 → 빈도 artifact 아님, *학습된 친숙도*. caveat: cross-continental far-OOD라 절대값 부풀려짐 → 기여는 *var↔MSP 격차+강건성*.
 
-→ **결론(확정)**: CREE의 *정확도·small-n·대규모-SSL* 우위는 없음(선형이 강함, §26; (c)(e) negative). 그러나 **신뢰성 축의 세 capability — 내재 분산 open-set(d, 0.946 vs MSP 0.676) · model-agnostic conformal coverage(b, 0.920) · cross-cohort 전이(f, var 0.999 vs MSP 0.633, 코호트 강건) — 가 모두 성립**. 검증된 CREE 형태 = **얕은 변분 random-effects embedding + variance-as-nonconformity**(deep-SSL 경로 아님). honest top-tier 스토리 = "embedding이 정확도론 선형을 못 이기나, *신뢰성(open-set)에선 내재 불확실성으로 post-hoc MSP를 압도하고 코호트 경계를 넘어 전이*한다." pilot 완료 — 다음은 paper-2 작성(분산↔conformal 효율 정량 비교는 본실험에서).
+→ **결론(확정)**: CREE의 *정확도·small-n·대규모-SSL* 우위는 없음(선형이 강함, §26; (c)(e) negative). 그러나 **신뢰성 축의 네 capability — far-OOD 내재 분산(d, 0.946 vs MSP 0.676) · model-agnostic conformal coverage(b, 0.920) · cross-cohort 전이(f, var 0.999 vs MSP 0.633) · near-OOD(g, 0.782, 모든 점수 중 최고) — 가 모두 성립**. 검증된 CREE 형태 = **얕은 변분 embedding + variance-as-nonconformity**(메커니즘 = 변분 학습된 코드별 친숙도; random-effects 수축은 정확도 축의 별개 기여이고 OOD 신호의 원인은 아님 — §27.2 교정). honest top-tier 스토리 = "embedding이 정확도론 선형을 못 이기나, *신뢰성(open-set)에선 내재 불확실성으로 far·near·cross-cohort 모두에서 post-hoc MSP를 압도*한다 — near-OOD(법과학 최대 난제)에서 유일하게 작동하는 레버." pilot 완료 — 다음은 paper-2 작성.
