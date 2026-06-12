@@ -38,11 +38,11 @@
 
 | 통합 RQ | 질문 (한 줄) | 구성 sub-question | 상태 |
 |---|---|---|---|
-| **★ RQ-Ⅰ (발견·핵심)** | fine-scale forensic ancestry의 *open-set 신뢰성*은 정확도/모델 복잡도가 아니라 **base-model**의 속성인가? | RQ1★(base-model이 OSR 좌우) · RQ3(*내부 enabler*: simplicity result — 정규화 선형 > 전체 복잡도 사다리, FST-한계 아님; 인코딩 post-mortem은 부록만) · RQ4(ECE ≠ OSR, 메커니즘) | **ANSWERED ★** |
+| **★ RQ-Ⅰ (발견·핵심)** | **법정-방어가능** fine-scale ancestry 신뢰성(미수록 집단 거부 + per-population coverage)은 *정확도 최고 모델*로 얻어지는가, 아니면 **base-model 보정**이 좌우하는가? | RQ1★(정확도 1등이 법정 신뢰성 최악 — OSR·집단별 coverage를 base가 좌우) · RQ3(*내부 enabler*: simplicity result — 정규화 선형 > 전체 복잡도 사다리, FST-한계 아님; 인코딩 post-mortem은 부록만) · RQ4(ECE ≠ OSR, 메커니즘) | **ANSWERED ★** |
 | **RQ-Ⅱ (방법 타당성)** | 분포-free conformal trust layer가 저분리 영역(≈57–80% 정확도)에서 **유효·실용 보장**(목표 coverage + 사용 가능 set/패널)을 주는가? | RQ2(coverage + set/패널 크기) | **ANSWERED** |
 | **RQ-Ⅲ (배치 현실성)** | 이 신뢰 파이프라인이 **forensic 배치 제약**을 견디는가? | RQ5(최소 배치 패널) · RQ6(열화 DNA/ADO) · RQ7(외부 코호트 HGDP 전이) | **ANSWERED** |
 
-**한 문장 기여(3막)**: fine-scale forensic ancestry의 open-set 신뢰성은 정확도가 아니라 *base-model·인코딩*의 속성이며(RQ-Ⅰ), 분포-free trust layer가 이를 저정확도에서도 유효 보장으로 전환하고(RQ-Ⅱ), 그 보장은 최소 패널·열화·코호트 이동에도 견딘다(RQ-Ⅲ).
+**한 문장 기여(3막)**: 법정-방어가능 fine-scale ancestry 신뢰성은 *정확도 최고 모델*이 아니라 **보정된 단순 base**에서 나오며(정확도 1등이 오히려 미수록 집단 과확신·집단별 coverage 누수 — RQ-Ⅰ), 분포-free trust layer가 이를 저정확도에서도 유효 보장으로 전환하고(RQ-Ⅱ), 그 보장은 최소 패널·열화·코호트 이동에도 견딘다(RQ-Ⅲ).
 
 ---
 
@@ -50,12 +50,14 @@
 
 > 표기: **[ANSWERED]** = 실측으로 답함 / **[PENDING]** = 진행 중 / **[DEFERRED]** = Paper 2 또는 데이터 확장 후. 각 RQ 머리말의 `[▸ RQ-Ⅹ]`는 소속 통합 RQ.
 
-### ★ RQ1 (Primary) `[▸ RQ-Ⅰ]` — Open-set 신뢰도는 정확도가 아니라 base-model이 좌우하는가?
+### ★ RQ1 (Primary) `[▸ RQ-Ⅰ]` — 법정-방어가능 ancestry 신뢰성은 *정확도 최고 모델*로 얻어지는가, 아니면 무엇이 좌우하는가?
 
-- **질문**: 데이터·인코딩·split을 고정하고 base estimator만 바꿀 때, open-set 거부 성능(far-OOD AUROC, empty-set 거부, near-OOD/LOPO)은 분류 정확도가 아니라 base-model의 보정/선택에 의해 결정되는가?
-- **왜 중요**: 법과학 실무·ML 양쪽에 반직관적. "리더보드 1등 모델을 쓰라"는 통념을 뒤집고, 신뢰가 필요한 도메인의 모델 선택 기준을 바꾼다. `docs/03` 기준 forensic ancestry에 CP/OSR 적용 0편(Zhang 2025) — novelty 앵커.
-- **가설**: 더 잘 보정된 단순 base(one-hot LogReg)가 정확도와 OSR을 **동시에** 최고로 달성하고, gradient-boosted trees는 OOD에 과확신하여 OSR 최악.
-- **근거 [ANSWERED, 강함]**: §20(10-seed). LogReg far-OOD AUROC **0.840±0.016** vs XGBoost **0.675±0.038** → 격차 0.165 ≈ **~4σ**. empty-set 거부: LogReg 발화 / XGBoost 0.000±0.000. coverage는 세 base 모두 ≥0.90(보장은 base-무관). → **2단 메시지: 보장은 base-agnostic, 분리는 base가 좌우.**
+> **프레이밍 (2026-06-12)**: 본 질문은 **바이오포렌식 도메인 질문**으로 묻는다 — *"법정에 제출 가능한 신뢰성(미수록 집단 거부 + per-population coverage)을 얻으려면 가장 정확한 분류기를 고르면 되는가?"*. (순수 ML 일반화 — "open-set 신뢰성은 base-model이 좌우" — 는 같은 결과의 **Paper 2 / ML-venue 프레임**, docs/08 §5.)
+
+- **질문(forensic)**: 법정 제출용으로 방어 가능한 ancestry 신뢰성 — **미수록(out-of-reference) 집단의 거부**와 **집단별(per-population) coverage** — 을 얻으려면 *정확도가 가장 높은 분류기*를 고르면 되는가? (검증: 데이터·인코딩·split 고정, base estimator만 교체하는 ablation — far-OOD AUROC·empty-set 거부·near-OOD/LOPO·집단별 coverage.)
+- **왜 중요(forensic)**: 현장·벤치마크는 정확도/AUC로 모델을 고른다(Chen 2025 95.6%). **"정확도 최고 모델이 법정엔 가장 위험"**(out-of-reference 과확신 + 특정 집단 under-cover)이면 forensic 모델선택·admissibility 기준 자체가 바뀐다. `docs/03` 기준 forensic ancestry에 CP/OSR 적용 0편(Zhang 2025) — novelty 앵커.
+- **가설**: 더 잘 보정된 단순 base(one-hot LogReg)가 정확도와 *신뢰성*(OSR + per-pop coverage)을 **동시에** 최고로 달성하고, 정확도 1등 gradient-boosted trees는 OOD에 과확신·집단 under-cover로 신뢰성 최악.
+- **근거 [ANSWERED, 강함]**: §20(10-seed). LogReg far-OOD AUROC **0.840±0.016** vs XGBoost **0.675±0.038** → 격차 0.165 ≈ **~4σ**. empty-set 거부: LogReg 발화 / XGBoost 0.000±0.000. **per-population coverage(§3.1)**: 권장 LogReg는 α=0.1·0.05에서 *모든 집단* target 충족(KHV 0.90/0.96)이나 **XGBoost는 marginal 0.888인데 KHV 0.70으로 붕괴** — *정확도 1등이 집단별 신뢰성에서 새는* 직접 증거. → **3단 메시지: marginal 보장은 base-agnostic이나, open-set 분리·집단별 coverage(=법정 신뢰성)는 base가 좌우.**
 
 ### RQ2 `[▸ RQ-Ⅱ]` — 분포-free conformal이 저정확도에서도 목표 커버리지를 주는가? 패널 크기와 set은?
 
