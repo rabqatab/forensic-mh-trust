@@ -7,6 +7,8 @@
 
 > **v2 변경점**: 각 옵션마다 직접 선행연구 2~6편 인용 + 갭 정확히 명시. Zhang (2025) "AI in forensic genetics" 리뷰 (JTGG, 103 refs)에 **conformal prediction · open-set · foundation model · SSL이 전혀 미언급**됨을 anchor evidence로 활용.
 
+> ⚠️ **시점 주의 (이 문서는 2026-05-26 brainstorm 스냅샷)**: 채택안(옵션 1 = CP+OSR)의 *현재* 구현은 그 후 진화했다 — **base model XGBoost → LogReg(one-hot)** · **open-set Energy-based → conformal empty-set + MSP** · **Olsson 2025 → Papangelou et al. 2025**(Frontiers Bioinf 저자 오귀속 교정). 아래 §6부 sample pitch들은 *당시* 후보 표현이며, 현재 framing은 `docs/05`(3-act RQ-Ⅰ/Ⅱ/Ⅲ)·`docs/04`·`docs/08` 참조.
+
 ---
 
 ## 1부. 설계 공간 — 변경 가능한 6개 축
@@ -55,7 +57,7 @@
 
 **📚 선행연구 (Prior Art)**:
 
-1. **Olsson H et al. (2025)** *"Reliable machine learning models in genomic medicine using conformal prediction"* Frontiers Bioinf. https://www.frontiersin.org/journals/bioinformatics/articles/10.3389/fbinf.2025.1507448/full
+1. **Papangelou et al. (2025)** *"Reliable machine learning models in genomic medicine using conformal prediction"* Frontiers Bioinf 5:1507448 (doi:10.3389/fbinf.2025.1507448). https://www.frontiersin.org/journals/bioinformatics/articles/10.3389/fbinf.2025.1507448/full *(이전 "Olsson 2025"는 저자 오귀속 — CrossRef 확인)*
    - **첫 CP-in-genomic-medicine 적용**. Drug response (infliximab), B-cell lymphoma subtype, afatinib sensitivity 회귀. 95.2% empirical coverage achieved.
    - **본 옵션과의 갭**: forensic ancestry 미적용; Mondrian CP를 conceptually 언급만 하고 실험에는 안 씀. → **본 옵션은 forensic 첫 적용 + Mondrian 실험 구현 모두 신규**.
 

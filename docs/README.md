@@ -6,9 +6,11 @@ All documents are anchored by the **research questions**. Read in this order.
 
 | # | Document | Role |
 |---|---|---|
-| **05** | [`05_research_questions.md`](05_research_questions.md) | **Start here.** The confirmed RQs (RQ1–RQ7), proposal→paper evolution, RQ↔evidence map, explicit non-RQs (scope). |
-| **04** | [`04_experiments_and_results.md`](04_experiments_and_results.md) | The evidence log — every experiment, tagged to its RQ. §13/§20/§21 hold the canonical numbers; Appendix A is the encoding post-mortem (RQ3). |
+| **05** | [`05_research_questions.md`](05_research_questions.md) | **Start here.** The 3-act paper spine (RQ-Ⅰ/Ⅱ/Ⅲ) over the seven sub-RQs (RQ1–7), proposal→paper evolution, RQ↔evidence map, explicit non-RQs (scope). |
+| **04** | [`04_experiments_and_results.md`](04_experiments_and_results.md) | The evidence log — every experiment, tagged to its RQ. §13/§20/§22/§23 hold the canonical numbers; §3.1 per-population coverage; Appendix A is the encoding post-mortem (RQ3). |
 | **06** | [`06_failures_and_revisions.md`](06_failures_and_revisions.md) | **Failure post-mortem** — retracted claims, abandoned/deferred approaches, engineering bugs (what failed, why, how fixed), each anchored to an RQ. |
+| **07** | [`07_method_proposal.md`](07_method_proposal.md) | **CREE** (Conformal Random-Effects Embeddings) — Paper-2 method proposal + pilot results (d/b/f positive, c/e negative). |
+| **08** | [`08_venue_strategy.md`](08_venue_strategy.md) | FSI:G venue-fit + re-anchor plan: competitor map, the 3 forensic-reviewer pre-empts (LR-calibration, per-population coverage, validation), submission checklist. |
 
 > **Canonical numbers live in `04` §13 (accuracy), §20 (trust rigor, 10-seed), §21 (minimum panel).** Earlier sections (§3–§5, §7, §9) are XGBoost/ordinal-era and are explicitly marked *superseded* — kept as chronological history, not as current results.
 
@@ -24,14 +26,14 @@ All documents are anchored by the **research questions**. Read in this order.
 
 ## RQ → where the evidence is
 
-| RQ | Primary evidence (in `04`) |
-|---|---|
-| **RQ1** base-model governs open-set reliability | §20 (10-seed, 4σ), §11 |
-| RQ2 conformal coverage at target | §3, §21 |
-| RQ3 encoding artifact, one-hot+linear wins | §13, Appendix A, §8 (PCA ablation) |
-| RQ4 ECE ≠ open-set separability | §14 |
-| RQ5 no compact minimum panel | §21 (incl. L1) |
-| RQ6 degraded-DNA (ADO) robustness | §15 |
-| RQ7 external-cohort (HGDP) transfer | §4.6 *(pending)* |
+| RQ (sub) | 3-act | Primary evidence (in `04`) |
+|---|---|---|
+| **RQ1** base-model governs open-set reliability & per-population coverage | RQ-Ⅰ | §20 (10-seed, 4σ), §3.1 (per-pop), §11 |
+| RQ3 simplicity result (linear > full ladder); not F_ST-limited (*internal enabler*) | RQ-Ⅰ | §13, §24, Appendix A |
+| RQ4 ECE ≠ open-set separability | RQ-Ⅰ | §14 |
+| RQ2 conformal coverage at target + set/panel size | RQ-Ⅱ | §3, §21 |
+| RQ5 **deployable minimum panel exists** (multivariate rescue, 10–15× smaller) | RQ-Ⅲ | §23 |
+| RQ6 degraded-DNA (ADO) robustness | RQ-Ⅲ | §15 |
+| RQ7 external-cohort (HGDP) transfer — **in-callset 87.3%** | RQ-Ⅲ | §22 |
 
 *Not committed:* `paperwork/` (proposal, assignment, paper drafts) and `docs/superpowers/` (internal plans/specs) are intentionally excluded from version control.

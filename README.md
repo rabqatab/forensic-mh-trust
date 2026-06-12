@@ -24,8 +24,8 @@ Five-class East-Asian classification, genome-wide **3,042 microhaplotypes**, 504
 | SSL transformer (FM) | 26.3% | — | — |
 
 - **Open-set reliability is a base-model property** — swapping *only* the estimator moves far-OOD AUROC by **0.165 ≈ 4σ**; the leaderboard model (XGBoost) is the *worst* at abstaining.
-- **The conformal guarantee is base-agnostic** — coverage holds (≥0.90 at α=0.10) for every base model; prediction sets average **~1.8 of 5 labels** at 90% coverage with the linear base.
-- **The "57% ceiling" was an encoding artifact, not an F_ST limit** — nominal diplotypes one-hot-encoded (no scaler) lift a regularized linear model from ~57% to **79.6%** (see [`docs/04` Appendix A](docs/04_experiments_and_results.md)).
+- **The conformal guarantee is base-agnostic, but per-population coverage is not** — marginal coverage holds (≥0.90 at α=0.10) for every base; prediction sets average **~1.7 of 5 labels** at 90% with the linear base. Reporting *per-population* (Mondrian) coverage, the linear base holds the target for every population (KHV 0.90), whereas XGBoost — at a comparable marginal 0.888 — silently under-covers KHV at **0.70**: court-relevant subgroup reliability is itself a base-model property.
+- **Fine-scale East-Asian separation is not F_ST-limited; a regularized linear model beats the whole complexity ladder** — one-hot diplotypes (no scaler) lift a linear model to **79.6%**, ahead of GBDTs, five DL families, FT-Transformer/TabNet and TabPFN — a *simplicity result* (Grinsztajn et al. 2022). The long-stuck "~57%" was an ordinal-encoding artifact, documented in [`docs/04` Appendix A](docs/04_experiments_and_results.md).
 - **A deployable minimum panel exists** — univariate (MI) selection found none, but **multivariate selection front-loads the signal**: 25 markers reach 52% (8× more marker-efficient than MI) and 1,000 reach 76.8% (96% of the full-panel 79.6%) — confirmed by two independent selectors (one-shot coefficient ranking and recursive feature elimination, agreeing within ~2 points). Crucially, **conformal coverage holds (≥0.93) at every panel size** — even a 25-marker panel gives valid prediction sets; markers trade off only set-size and OOD-separation. A 200–300 marker panel (10–15× reduction) meets a practical forensic trust spec; fixed deployable panels (top-50/100/200 markers) are emitted as a deliverable.
 - **Degraded-DNA limit** — under simulated allele dropout the conformal guarantee degrades measurably (coverage 0.91 → 0.80 at 50% ADO): exchangeability is violated, a forensic-realism limit competitors do not expose.
 - **External-cohort transfer** — trained on 1000 Genomes EAS, the model transfers to an independent cohort (HGDP) at **87.3%** on three overlapping populations, validated *in-callset* on the harmonized gnomAD HGDP+1KG GRCh38 release (full 3,042 markers, build-mismatch eliminated: unseen diplotypes 43% → 2.4%). Transfer accuracy exceeds within-HGDP cross-validation, a strong generalization signal.
@@ -34,15 +34,13 @@ Five-class East-Asian classification, genome-wide **3,042 microhaplotypes**, 504
 
 The project is organized around the research questions in **[`docs/05_research_questions.md`](docs/05_research_questions.md)** — start there.
 
-| RQ | Claim | Status |
+The paper is organized as a **3-act spine** (Finding → Method → Deployment); the original seven RQs are preserved as the constituent sub-questions.
+
+| Paper RQ (3-act) | Sub-questions | Status |
 |---|---|---|
-| **RQ1 (primary)** | Open-set reliability is governed by the base model, not accuracy | ✅ (4σ) |
-| RQ2 | Conformal delivers target coverage despite modest accuracy | ✅ |
-| RQ3 (enabling) | The "ceiling" is an encoding artifact; one-hot + linear wins | ✅ |
-| RQ4 | Calibration (ECE) ≠ open-set separability (AUROC) | ✅ |
-| RQ5 (scope) | A deployable minimum panel exists (accuracy–trust frontier, 10–15× smaller) | ✅ (re-scoped) |
-| RQ6 | Conformal coverage degrades under degraded-DNA (ADO) | ✅ |
-| RQ7 | The model + trust layer transfers to an external cohort (HGDP) | ✅ (in-callset 87.3%) |
+| **★ RQ-Ⅰ (Finding)** — Is court-defensible reliability (out-of-reference rejection + per-population coverage) obtained by picking the *most accurate* classifier, or governed by base-model calibration? | RQ1 (the accuracy-leader is the *least* court-reliable — base-model governs OSR & per-population coverage) · RQ3 (encoding / simplicity result — *internal enabler*, not a standalone claim) · RQ4 (ECE ≠ open-set separability) | ✅ (4σ) |
+| **RQ-Ⅱ (Method)** — Does a distribution-free conformal trust layer give valid coverage at low accuracy? | RQ2 (target coverage + usable set/panel size) | ✅ |
+| **RQ-Ⅲ (Deployment)** — Does the pipeline survive forensic constraints? | RQ5 (deployable minimum panel, 10–15× smaller) · RQ6 (degraded-DNA / ADO) · RQ7 (external-cohort HGDP transfer, in-callset 87.3%) | ✅ |
 
 ## Repository structure
 
@@ -73,12 +71,13 @@ uv pip install -e ".[dev]" && uv run python -m pytest -q   # test suite
 bash scripts/data/01_download_1000g.sh && bash scripts/data/06_download_genome_wide.sh
 
 # Headline experiments (canonical numbers)
-uv run python scripts/models/19_onehot_cv.py        # RQ3 — one-hot LogReg 79.6%
-uv run python scripts/trust/24_trust_rigor.py      # RQ1 — base-model governs OSR (10-seed)
-uv run python scripts/panel/25_min_panel_logreg.py # RQ5 — no compact panel
-uv run python scripts/panel/26_l1_panel_cv.py      # RQ5 — L1 sparse panel
-uv run python scripts/trust/17_calibration_uq.py   # RQ4 — ECE vs OSR
-uv run python scripts/trust/18_ado_robustness.py   # RQ6 — degraded-DNA
+uv run python scripts/models/19_onehot_cv.py        # RQ3 — one-hot LogReg 79.6% (simplicity result)
+uv run python scripts/trust/24_trust_rigor.py       # RQ1 — base-model governs OSR (10-seed)
+uv run python scripts/trust/53_perpop_coverage.py   # RQ1 — per-population coverage (LogReg holds, XGBoost masks KHV)
+uv run python scripts/panel/27_min_panel_strong.py  # RQ5 — multivariate selection rescues the minimal panel
+uv run python scripts/trust/17_calibration_uq.py    # RQ4 — ECE vs OSR
+uv run python scripts/trust/18_ado_robustness.py    # RQ6 — degraded-DNA
+uv run python scripts/rq7/42_rq7_incallset.py       # RQ7 — external-cohort transfer (87.3%)
 ```
 
 Full script→experiment→RQ map is in [`docs/04`](docs/04_experiments_and_results.md) §18.

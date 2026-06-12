@@ -35,8 +35,11 @@ numbers live in `docs/04` §13/§20/§21/§22.1/§23/§24/§25.
 | `16_plan2_rf.py` | base-model swap → RandomForest | §11 (RQ1) |
 | `20_plan2_logreg.py` | base-model swap → LogReg | §11 (RQ1) |
 | `24_trust_rigor.py` | **10-seed base-model OSR (4σ)** | §20 (RQ1 ★) |
+| `53_perpop_coverage.py` | **per-population (Mondrian) coverage, LogReg 10-seed** | §3.1 (RQ1/RQ2) |
 | `17_calibration_uq.py` | ECE + deep ensembles / MC-dropout | §14 (RQ4) |
 | `18_ado_robustness.py` | degraded-DNA (allele dropout) | §15 (RQ6) |
+| `47_embed_conformal.py` | CREE (b): embedding + conformal coverage | §27.1 (CREE) |
+| `49_cree_variance.py` | CREE (d): variance-as-nonconformity open-set | §27.1 (CREE ★) |
 
 ## `models/` — model zoo: encoding · trees · DL · SOTA (RQ3)
 | script | purpose | docs |
@@ -54,6 +57,7 @@ numbers live in `docs/04` §13/§20/§21/§22.1/§23/§24/§25.
 | `36_native_cat_trees.py` | native-categorical HGBDT / CatBoost | §24.5 |
 | `37_sota_dl.py` | FT-Transformer + TabNet (GPU) | §24.5 |
 | `38_tabpfn_panel.py` | TabPFN@200 (cloud, tabpfn-client) | §24.5 |
+| `50_smalln_robustness.py` | CREE (e): extreme small-n vs LogReg | §27.1 (CREE) |
 
 ## `panel/` — minimum panel (RQ5)
 | script | purpose | docs |
@@ -70,9 +74,11 @@ numbers live in `docs/04` §13/§20/§21/§22.1/§23/§24/§25.
 | `34_ssl_retrain.py` | first SSL@2504 (confounded) | §25 |
 | `40_ssl_ablation.py` | data-scale ablation, 1000G hg19 | §25.2 |
 | `41_ssl_gnomad.py` | clean ablation, gnomAD hg38 (GPU) | §25.1 |
+| `48_ssl_randeff.py` | CREE (c): SSL + random-effects encoder (negative) | §27.1 (CREE) |
 
 ## `rq7/` — external-cohort transfer (RQ7)
 | script | purpose | docs |
 |---|---|---|
 | `23_hgdp_transfer.py` | cross-build preliminary (82.4%) | §22.2 |
 | `42_rq7_incallset.py` | **in-callset final (87.3%)** | §22.1 |
+| `52_cree_transfer.py` | CREE (f): cross-cohort transfer (var 0.999 vs MSP) | §27.1 (CREE ★) |
