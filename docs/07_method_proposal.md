@@ -36,7 +36,7 @@
 
 ## 7. 2주 pilot — **결과 (2026-05-31)**
 - **★(d) variance-as-nonconformity = POSITIVE**: 변분 분산 점수 far-OOD open-set **AUROC 0.946 ± 0.010** vs 같은 모델 MSP 0.676 → 내재 분산이 MSP를 압도, LinearSVC(0.957) 근접. **CREE 핵심 capability 성립**(§27.1).
-- **★(g) near-OOD = POSITIVE (최대 난제에서 유일 작동 레버, §27.2)**: KOR-proxy(15개 미수록 HGDP-EAS 집단)에서 변분 분산 **near-OOD AUROC 0.782 ± 0.005** — MSP(0.670)·거리(Mahalanobis/kNN 0.69)·set-size(0.48)를 8–11p 압도, **모든 점수 중 최고·최안정**. 난이도 gradient 확인(far 1.0 → near 0.78). 메커니즘 검증(§27.2): KL 무관(KL=0도 0.772)·OTHER 무관(제외해도 0.78–0.80) → *변분 학습된 코드별 친숙도*가 원천. *단 0.78은 moderate — near-OOD는 완화 가능 한계지 해결 아님.*
+- **★(g) near-OOD = POSITIVE (최대 난제에서 유일 작동 레버, §27.2)**: KOR-proxy(15개 미수록 HGDP-EAS 집단)에서 변분 분산 **near-OOD AUROC 0.782 ± 0.005** — MSP(0.670)·거리(Mahalanobis/kNN 0.69)·set-size(0.48)를 8–11p 압도, **모든 점수 중 최고·최안정**. 난이도 gradient 확인(far 1.0 → near 0.78). 메커니즘 검증(§27.2): KL 무관(KL=0도 0.772)·OTHER 무관(제외해도 0.78–0.80) → *변분 학습된 코드별 친숙도*가 원천. **boost**: {variance, rel-Maha, MSP} 단순 z-fusion으로 **~0.82**(미관측 집단 전이), 단 앙상블·거리류 무효. *0.82는 여전히 moderate — near-OOD는 완화 가능 한계지 해결 아님.*
 - **(b) coverage = POSITIVE**: conformal coverage 0.920 유지(embedding-DL에서도 model-agnostic).
 - **(e) 극소표본 = NEGATIVE**: RandEff가 n=50–full 전 구간 LogReg에 −8~10p. shrinkage embedding은 소표본 정확도 이점 없음.
 - **(c) SSL+random-effects = NEGATIVE**: gnomAD 4091 사전학습 후 acc **52.7 ± 3.5%**(far-OOD AUROC 0.632) — naive SSL 54.0·supervised 55.4와 동일. 수축을 *deep* SSL transformer에 붙여도 SSL 한계(§25) 못 넘음. 대비: 같은 수축이 *얕은* RandEff(72.6%)에선 +43p → **정규화 이득은 지배적 inductive bias일 때만** 발현(transformer attention의 별도 과적합이 묻음).
