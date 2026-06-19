@@ -1,7 +1,7 @@
 # 문헌 정독 + 경쟁 논문 매핑 (v1)
 
 **검토일**: 2026-05-26
-**갱신**: 2026-05-30 — Notion §5(Previous Studies) 동기화 → **7부** 추가(댓글 제안 + forward-citation); **8부** 추가(DL-popgen 아키텍처·tabular-DL SOTA·확장 데이터 자원 = §24 실험 근거). 2026-05-31 — **9부**(embedding을 *잘* 만든 접근, Paper 2). 2026-06-01 — **10부** 추가(Notion §5.10·§5.11 댓글 2차: 비-ML X-InDel·친족 DeepKin/LR·BGA Alladio 2022·DL 집단구조 HaploNet/DietNet-bioRxiv).
+**갱신**: 2026-05-30 — Notion §5(Previous Studies) 동기화 → **7부** 추가(댓글 제안 + forward-citation); **8부** 추가(DL-popgen 아키텍처·tabular-DL SOTA·확장 데이터 자원 = §24 실험 근거). 2026-05-31 — **9부**(embedding을 *잘* 만든 접근, Paper 2). 2026-06-01 — **10부** 추가(Notion §5.10·§5.11 댓글 2차: 비-ML X-InDel·친족 DeepKin/LR·BGA Alladio 2022·DL 집단구조 HaploNet/DietNet-bioRxiv). 2026-06-12 — Notion §5↔docs/02 **동기화 점검**: 7-A ESA 2024 친족에 저자+DOI(§5.4 일치) 보강, 7-B에 Large-scale informative MH(§5.9.2) 누락분 명시 → previous-studies 항목 양방향 일치 확인.
 **검색 범위**: PMC, PubMed, FSI:Genetics, Frontiers, bioRxiv, ResearchGate, Semantic Scholar(forward-citation)
 **제한**: ScienceDirect / Springer 일부 paywall — abstract 위주 확보
 
@@ -336,7 +336,7 @@ Ancestry용 표준 informativeness measure는:
 - **차별점**: 대륙·광역 조상 vs 우리 근연 EAS fine-scale. SNP vs MH. CP/OSR 없음. '2단계 vs 단일단계'는 우리 RQ5·계층 분류와 닿음.
 
 #### 친족 분석 + ML (forensic NGS 패널) (Expert Syst. Appl. 2024) — 6부 "Kinship NGS ML" 상세화
-**제목**: *Kinship analysis and machine learning algorithms in forensic contexts: A new NGS panel*
+**제목**: *Kinship analysis and machine learning algorithms in forensic contexts: A new NGS panel* — Cosenza, Castellino, Morelli, Alladio & Pilli, Expert Syst. Appl., 2024. DOI 10.1016/j.eswa.2024.126161.
 **URL**: https://www.sciencedirect.com/science/article/pii/S0957417424030288 (PII S0957417424030288)
 - forensic NGS **~4,849 SNP** 패널(성별 무관 고차 혈연도 구별), **15만+ 쌍**, Forrel(R) + ML 병용.
 - **차별점**: 과제가 **친족(kinship)** — 우리 집단(ancestry) 분류와 다른 축. CP/OSR 없음. forensic ML 적용 폭(혈연) 사례.
@@ -362,6 +362,12 @@ Ancestry용 표준 informativeness measure는:
 **URL**: Journal of Translational Genetics and Genomics, 2025.
 **인용 앵커**: Oldoni·MicroHapDB.
 - MH로 중국 구이저우 **7 민족** 집단구조 규명(분류 ML보다 구조분석 중심). EAS MH 집단구조 인접 사례.
+
+#### Large-scale informative MH 대규모 선별 (FSI:G 2024) — RQ5 직결 [상세=2부 참고용표·8-D]
+**제목**: *Large-scale selection of highly informative microhaplotypes for ancestry inference and population specific informativeness* (de Barros Rodrigues et al.)
+**URL**: https://www.sciencedirect.com/science/article/pii/S1872497324001492 (PII S1872497324001492 = S1872-4973(24)00149-2) — DOI 10.1016/j.fsigen.2024.103153
+**인용 앵커**: Oldoni·MicroHapDB.
+- 12만+ 후보에서 ancestry용 고정보 MH 대규모 선별 파이프라인. **우리 RQ5(최소 패널)·§4.7 minimal-panel 앵커와 직결**. (Notion §5.9.2 forward-citation 표에 수록 → 동기화 위해 7-B에도 명시; 전체 서지는 8-D `de Barros Rodrigues et al. 2025` 참조.)
 
 **방법 메모**: forward-citation = Semantic Scholar citations API + scope 필터(동아시아·MH/AISNP ancestry·ML·신뢰정량화). **scope 경계로 제외**: "Integrative forensic genomics … trace DNA 마약사건"(FSI:G 2026, 사건 적용)·Afghan/Somali MH(Genes 2025, 비-EAS)·Brazil MH(admixed)·triallelic SNP 친자(degraded, kinship). 앵커가 2025–26 최신이라 색인된 citer가 적어 **시점 스냅샷이며 추후 갱신 권장**.
 
